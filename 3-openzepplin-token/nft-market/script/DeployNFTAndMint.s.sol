@@ -5,8 +5,8 @@ import {Script} from "forge-std/Script.sol";
 
 import {DecentMarketNFT} from "../src/DecentMarketNFT.sol";
 
-/// @notice Simple deployment script that also mints three NFTs.
-contract DeployAndMint is Script {
+/// @notice Deployment script for DecentMarketNFT that also mints three NFTs.
+contract DeployNFTAndMint is Script {
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address recipient = vm.envAddress("MINT_TO");

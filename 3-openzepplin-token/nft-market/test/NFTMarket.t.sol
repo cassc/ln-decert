@@ -25,11 +25,11 @@ contract NFTMarketTest is Test {
         vm.etch(ERC1820, type(ERC1820RegistryMock).runtimeCode);
 
         nft = new DecentMarketNFT("Decent Market NFT", "DMNFT");
-        token = new DecentMarketToken("Decent Market Token", "DMT", owner);
+        token = new DecentMarketToken();
         market = new NFTMarket(token);
 
-        token.mint(buyer, 100 ether);
-        token.mint(seller, 5 ether);
+        token.transfer(buyer, 100 ether);
+        token.transfer(seller, 5 ether);
 
         vm.prank(owner);
         nft.mintTo(seller, "ipfs://example");
@@ -61,33 +61,5 @@ contract NFTMarketTest is Test {
         assertEq(priceAfter, 0);
     }
 
-    function testBuyNFTViaTokensReceived() public {
-        uint256 tokenId = 0;
-        vm.prank(seller);
-        market.list(address(nft), tokenId, PRICE);
 
-        uint256 sellerBalanceBefore = token.balanceOf(seller);
-        uint256 buyerBalanceBefore = token.balanceOf(buyer);
-
-        bytes memory data = abi.encode(address(nft), tokenId);
-
-        vm.prank(buyer);
-        token.transferWithData(address(market), PRICE, data);
-
-        assertEq(nft.ownerOf(tokenId), buyer);
-        assertEq(token.balanceOf(seller), sellerBalanceBefore + PRICE);
-        assertEq(token.balanceOf(buyer), buyerBalanceBefore - PRICE);
-    }
-
-    function testTokensReceivedRevertsOnWrongAmount() public {
-        uint256 tokenId = 0;
-        vm.prank(seller);
-        market.list(address(nft), tokenId, PRICE);
-
-        bytes memory data = abi.encode(address(nft), tokenId);
-
-        vm.prank(buyer);
-        vm.expectRevert("Wrong amount");
-        token.transferWithData(address(market), PRICE - 1, data);
-    }
 }

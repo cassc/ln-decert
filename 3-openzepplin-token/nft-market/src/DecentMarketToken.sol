@@ -1,57 +1,95 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.0;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC777Recipient} from "@openzeppelin/contracts/interfaces/IERC777Recipient.sol";
 
-/// @notice Simple ERC20 token with an extra transfer function that passes data to receiver contracts.
-contract DecentMarketToken is ERC20, Ownable {
-    event TokensSent(address indexed operator, address indexed from, address indexed to, uint256 amount, bytes data);
+contract BaseERC20 {
+    string public name; 
+    string public symbol; 
+    uint8 public decimals; 
 
-    constructor(string memory name_, string memory symbol_, address owner_) ERC20(name_, symbol_) Ownable(owner_) {}
+    uint256 public totalSupply; 
 
-    /// @notice Mint new tokens.
-    function mint(address to, uint256 amount) external onlyOwner {
-        _mint(to, amount);
+    mapping (address => uint256) balances; 
+
+    mapping (address => mapping (address => uint256)) allowances; 
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    constructor() {
+        // write your code here
+        // set name,symbol,decimals,totalSupply
+        name = "BaseERC20";
+        symbol = "BERC20";
+        decimals = 18;
+        totalSupply = 10**8 * (10 ** decimals);
+        balances[msg.sender] = totalSupply;  
     }
 
-    /// @notice Transfer tokens with attached data so receivers can react through tokensReceived.
-    function transferWithData(address to, uint256 amount, bytes calldata data) external returns (bool) {
-        _transfer(msg.sender, to, amount);
-        _notifyTokensReceived(msg.sender, msg.sender, to, amount, data);
-        emit TokensSent(msg.sender, msg.sender, to, amount, data);
+    function balanceOf(address _owner) public view returns (uint256 balance) {
+        // write your code here
+        return balances[_owner];
+    }
+
+    function transfer(address _to, uint256 _value) public returns (bool success) {
+        // write your code here
+        require(balances[msg.sender] >= _value, "ERC20: transfer amount exceeds balance");
+        balances[msg.sender] -= _value;
+        balances[_to] += _value;
+        emit Transfer(msg.sender, _to, _value);
         return true;
     }
 
-    /// @notice Transfer tokens on behalf of another account with attached data.
-    function transferFromWithData(address from, address to, uint256 amount, bytes calldata data)
-        external
-        returns (bool)
-    {
-        _spendAllowance(from, msg.sender, amount);
-        _transfer(from, to, amount);
-        _notifyTokensReceived(msg.sender, from, to, amount, data);
-        emit TokensSent(msg.sender, from, to, amount, data);
-        return true;
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
+        // write your code here
+        require(balances[_from] >= _value, "ERC20: transfer amount exceeds balance");
+        require(allowances[_from][msg.sender] >= _value, "ERC20: transfer amount exceeds allowance");
+        balances[_from] -= _value;
+        balances[_to] += _value;
+        allowances[_from][msg.sender] -= _value;
+        
+        emit Transfer(_from, _to, _value); 
+        return true; 
     }
 
-    function _notifyTokensReceived(address operator, address from, address to, uint256 amount, bytes calldata data)
-        private
-    {
-        if (to.code.length == 0) {
-            return;
-        }
+    function approve(address _spender, uint256 _value) public returns (bool success) {
+        // write your code here
+        allowances[msg.sender][_spender] = _value;
 
-        try IERC777Recipient(to).tokensReceived(operator, from, to, amount, data, "") {
-            return;
-        } catch (bytes memory reason) {
-            if (reason.length == 0) {
-                revert("Receiver rejected tokens");
-            }
-            assembly {
-                revert(add(32, reason), mload(reason))
-            }
+        emit Approval(msg.sender, _spender, _value); 
+        return true; 
+    }
+
+    function allowance(address _owner, address _spender) public view returns (uint256 remaining) {
+        // write your code here
+        return allowances[_owner][_spender];
+    }
+}
+
+interface ITokenReceiver {
+    function tokensReceived(address from, uint256 amount) external;
+}
+
+// DecentMarketToken inherits from BaseERC20 and adds transferWithCallback
+contract DecentMarketToken is BaseERC20 {
+    constructor() BaseERC20() {
+        name = "DecentMarketToken";
+        symbol = "DMT";
+    }
+
+    function transferWithCallback(address to, uint256 amount) external {
+        require(transfer(to, amount), "Transfer failed");
+        if (isContract(to)) {
+            ITokenReceiver(to).tokensReceived(msg.sender, amount);
         }
+    }
+
+    // Utility function to check if an address is a contract
+    function isContract(address account) internal view returns (bool) {
+        uint256 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
     }
 }

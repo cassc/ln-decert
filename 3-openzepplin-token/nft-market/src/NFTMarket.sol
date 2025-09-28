@@ -6,7 +6,6 @@ import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Hol
 import {IERC777Recipient} from "@openzeppelin/contracts/interfaces/IERC777Recipient.sol";
 import {IERC1820Registry} from "@openzeppelin/contracts/interfaces/IERC1820Registry.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
 import {DecentMarketToken} from "./DecentMarketToken.sol";
 
 /// @notice Marketplace that accepts DecentMarketToken for NFT trading and reacts to transferWithData callbacks.
