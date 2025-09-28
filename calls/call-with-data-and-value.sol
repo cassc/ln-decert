@@ -23,7 +23,7 @@ contract Callee {
 contract Caller {
     function callSetValue(address callee, uint256 value) public returns (bool) {
         // call setValue()
-        bytes memory payload = abi.encode(Callee.setValue.selector, value);
+        bytes memory payload = abi.encodeWithSelector(Callee.setValue.selector, value);
         (bool success, ) = payable(callee).call{value: 1 ether}(payload);
         require(success, "call function failed");
         return success;

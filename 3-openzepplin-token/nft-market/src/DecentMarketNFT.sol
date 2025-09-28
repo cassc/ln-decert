@@ -10,10 +10,7 @@ contract DecentMarketNFT is ERC721URIStorage, Ownable {
 
     event Minted(address indexed to, uint256 indexed tokenId, string tokenURI);
 
-    constructor(string memory baseName, string memory baseSymbol)
-        ERC721(baseName, baseSymbol)
-        Ownable(msg.sender)
-    {}
+    constructor(string memory baseName, string memory baseSymbol) ERC721(baseName, baseSymbol) Ownable(msg.sender) {}
 
     function mintTo(address to, string memory tokenURI_) external onlyOwner returns (uint256 tokenId) {
         tokenId = _nextTokenId;

@@ -1,9 +1,0 @@
-{
-  "name": "Decent Market #1",
-  "description": "First NFT in the Decent Market collection.",
-  "image": "ipfs://YOUR_IMAGE_CID/market-1.png",
-  "attributes": [
-    { "trait_type": "Background", "value": "Sunset" },
-    { "trait_type": "Edition", "value": "Genesis" }
-  ]
-}

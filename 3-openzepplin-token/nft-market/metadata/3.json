@@ -1,0 +1,28 @@
+{
+  "name": "Decent Market #3",
+  "description": "Third NFT in the Decent Market collection. Inspired by Vincenzo Camuccini's painting “Hagar in the Desert” (1817).",
+  "image": "https://sapphire-efficient-penguin-931.mypinata.cloud/ipfs/bafybeigfvt2brd7ppgrcqjg65jonycvy7nu4pjdnh5hvqkfdmgr3uyvtdu",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Hagar in the Desert (Camuccini)"
+    },
+    {
+      "trait_type": "Edition",
+      "value": "Genesis"
+    },
+    {
+      "trait_type": "Year Painted",
+      "display_type": "number",
+      "value": 1817
+    },
+    {
+      "trait_type": "Dimensions (cm)",
+      "value": "106 × 120"
+    },
+    {
+      "trait_type": "Current Location",
+      "value": "National Museum in Warsaw"
+    }
+  ]
+}
