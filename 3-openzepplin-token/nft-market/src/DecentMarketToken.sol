@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {IERC777Recipient} from "@openzeppelin/contracts/interfaces/IERC777Recipient.sol";
 
 contract BaseERC20 {
     string public name; 
@@ -32,24 +33,15 @@ contract BaseERC20 {
     }
 
     function transfer(address _to, uint256 _value) public returns (bool success) {
-        // write your code here
-        require(balances[msg.sender] >= _value, "ERC20: transfer amount exceeds balance");
-        balances[msg.sender] -= _value;
-        balances[_to] += _value;
-        emit Transfer(msg.sender, _to, _value);
+        _transfer(msg.sender, _to, _value);
         return true;
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool success) {
-        // write your code here
-        require(balances[_from] >= _value, "ERC20: transfer amount exceeds balance");
         require(allowances[_from][msg.sender] >= _value, "ERC20: transfer amount exceeds allowance");
-        balances[_from] -= _value;
-        balances[_to] += _value;
         allowances[_from][msg.sender] -= _value;
-        
-        emit Transfer(_from, _to, _value); 
-        return true; 
+        _transfer(_from, _to, _value);
+        return true;
     }
 
     function approve(address _spender, uint256 _value) public returns (bool success) {
@@ -64,10 +56,12 @@ contract BaseERC20 {
         // write your code here
         return allowances[_owner][_spender];
     }
-}
-
-interface ITokenReceiver {
-    function tokensReceived(address from, uint256 amount) external;
+    function _transfer(address from, address to, uint256 value) internal {
+        require(balances[from] >= value, "ERC20: transfer amount exceeds balance");
+        balances[from] -= value;
+        balances[to] += value;
+        emit Transfer(from, to, value);
+    }
 }
 
 // DecentMarketToken inherits from BaseERC20 and adds transferWithCallback
@@ -77,10 +71,11 @@ contract DecentMarketToken is BaseERC20 {
         symbol = "DMT";
     }
 
-    function transferWithCallback(address to, uint256 amount) external {
-        require(transfer(to, amount), "Transfer failed");
+    function transferWithCallback(address to, uint256 amount, bytes calldata userData) external {
+        _transfer(msg.sender, to, amount);
+
         if (isContract(to)) {
-            ITokenReceiver(to).tokensReceived(msg.sender, amount);
+            IERC777Recipient(to).tokensReceived(msg.sender, msg.sender, to, amount, userData, "");
         }
     }
 

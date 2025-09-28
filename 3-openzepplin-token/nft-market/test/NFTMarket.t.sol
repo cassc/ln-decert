@@ -61,5 +61,67 @@ contract NFTMarketTest is Test {
         assertEq(priceAfter, 0);
     }
 
+    function testListStoresListing() public {
+        uint256 tokenId = 0;
+
+        vm.prank(seller);
+        market.list(address(nft), tokenId, PRICE);
+
+        (address listedSeller, uint256 listedPrice) = market.getListing(address(nft), tokenId);
+        assertEq(listedSeller, seller);
+        assertEq(listedPrice, PRICE);
+        assertEq(nft.ownerOf(tokenId), address(market));
+    }
+
+    function testListRevertsForNonOwner() public {
+        uint256 tokenId = 0;
+
+        vm.prank(buyer);
+        vm.expectRevert("Not owner");
+        market.list(address(nft), tokenId, PRICE);
+    }
+
+    function testTokensReceivedCompletesSale() public {
+        uint256 tokenId = 0;
+
+        vm.prank(seller);
+        market.list(address(nft), tokenId, PRICE);
+
+        uint256 sellerBalanceBefore = token.balanceOf(seller);
+        uint256 buyerBalanceBefore = token.balanceOf(buyer);
+
+        bytes memory payload = abi.encode(address(nft), tokenId);
+
+        vm.prank(buyer);
+        token.transferWithCallback(address(market), PRICE, payload);
+
+        assertEq(nft.ownerOf(tokenId), buyer);
+        assertEq(token.balanceOf(seller), sellerBalanceBefore + PRICE);
+        assertEq(token.balanceOf(buyer), buyerBalanceBefore - PRICE);
+        assertEq(token.balanceOf(address(market)), 0);
+
+        (address sellerAfter, uint256 priceAfter) = market.getListing(address(nft), tokenId);
+        assertEq(sellerAfter, address(0));
+        assertEq(priceAfter, 0);
+    }
+
+    function testTransferWithCallbackRequiresData() public {
+        uint256 tokenId = 0;
+
+        vm.prank(seller);
+        market.list(address(nft), tokenId, PRICE);
+
+        uint256 buyerBalanceBefore = token.balanceOf(buyer);
+
+        vm.prank(buyer);
+        vm.expectRevert("Invalid data");
+        token.transferWithCallback(address(market), PRICE, "");
+
+        (address listedSeller, uint256 listedPrice) = market.getListing(address(nft), tokenId);
+        assertEq(listedSeller, seller);
+        assertEq(listedPrice, PRICE);
+        assertEq(token.balanceOf(buyer), buyerBalanceBefore);
+    }
+
 
 }

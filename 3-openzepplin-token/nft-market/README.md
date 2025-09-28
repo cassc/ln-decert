@@ -20,6 +20,10 @@ This Foundry project implements a complete NFT marketplace ecosystem with ERC721
 
 Before you list an NFT, call `setApprovalForAll(address(market), true)` on your NFT contract. This approval lets the market move the token when someone buys it.
 
+The market contract also listens for ERC777 style token callbacks. It registers itself in the ERC1820 registry during deployment. In tests we copy (`vm.etch`) a small mock registry to the fixed address `0x1820…` so this registration step does not revert.
+
+To buy through the callback path, call `transferWithCallback(address(market), price, abi.encode(nftAddress, tokenId))` on `DecentMarketToken`. The encoded NFT address and token id travel in `userData` and the market finalises the sale inside `tokensReceived`.
+
 ## Deployment Scripts
 
 The project includes three deployment scripts for different components:
