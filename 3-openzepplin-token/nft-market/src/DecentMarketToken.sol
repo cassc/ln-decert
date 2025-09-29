@@ -66,7 +66,7 @@ contract BaseERC20 {
 
 // DecentMarketToken inherits from BaseERC20 and adds transferWithCallback
 contract DecentMarketToken is BaseERC20 {
-    constructor() BaseERC20() {
+    constructor() {
         name = "DecentMarketToken";
         symbol = "DMT";
     }
