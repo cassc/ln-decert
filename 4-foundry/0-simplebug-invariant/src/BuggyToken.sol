@@ -13,6 +13,15 @@ contract BuggyToken {
 
     address public owner;
 
+    uint128 public constant PROMO_MAX_CLAIM = 1_000 ether;
+
+    struct StagedMint {
+        uint128 amount;
+        uint128 unlockCode;
+    }
+
+    mapping(address => StagedMint) private stagedMints;
+
     event Transfer(address indexed from, address indexed to, uint256 value);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
@@ -53,5 +62,31 @@ contract BuggyToken {
 
         emit Transfer(msg.sender, to, amount);
         return true;
+    }
+
+    /// @notice Queue a promotional mint that should require a deliberate second step to execute.
+    function stagePromotionalMint(address recipient, uint128 amount, uint128 unlockCode) external onlyOwner {
+        require(recipient != address(0), "BuggyToken: promo to zero");
+        require(amount > 0, "BuggyToken: promo amount zero");
+        require(amount <= PROMO_MAX_CLAIM, "BuggyToken: promo cap exceeded");
+
+        stagedMints[recipient] = StagedMint(amount, unlockCode);
+    }
+
+    /// @notice Execute the staged promotional mint.
+    /// @dev BUG: The staged entry is never cleared, allowing repeated mints with the same code.
+    function executePromotionalMint(uint128 providedCode) external {
+        StagedMint memory staged = stagedMints[msg.sender];
+        require(staged.amount > 0, "BuggyToken: no staged promo");
+        require(staged.unlockCode == providedCode, "BuggyToken: invalid promo code");
+
+        totalSupply += staged.amount;
+        balanceOf[msg.sender] += staged.amount;
+        emit Transfer(address(0), msg.sender, staged.amount);
+    }
+
+    function getStagedMint(address account) external view returns (uint128 amount, uint128 unlockCode) {
+        StagedMint memory staged = stagedMints[account];
+        return (staged.amount, staged.unlockCode);
     }
 }
