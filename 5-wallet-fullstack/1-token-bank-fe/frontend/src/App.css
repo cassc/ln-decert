@@ -15,10 +15,58 @@
   gap: 1rem;
 }
 
+.app__contract {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #475569;
+  width: 100%;
+}
+
+.app__contract span {
+  font-family: 'Roboto Mono', 'Courier New', monospace;
+  background: #e2e8f0;
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+}
+
 .wallet {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.wallet__connectors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 320px;
+}
+
+.wallet__connector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.wallet__connector-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.wallet__connector-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  color: #0f172a;
 }
 
 .wallet__address {
@@ -86,6 +134,17 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+.button--outline {
+  background: transparent;
+  color: #1e293b;
+  border: 1px solid #cbd5f5;
+  box-shadow: none;
+}
+
+.button--outline:hover {
+  background: #e0e7ff;
+}
+
 .button:disabled {
   background: #94a3b8;
   cursor: not-allowed;
@@ -116,6 +175,7 @@
 }
 
 .hint {
+  display: block;
   margin-top: 0.75rem;
   font-size: 0.85rem;
   color: #64748b;

@@ -58,31 +58,53 @@ contract BankTest is Test {
         assertEq(top[2], carol);
     }
 
-    // 检查只有管理员可取款，其他人不可以取款。
-    function testWithdrawOnlyAdminCanCall() public {
+    // 检查只有管理员可通过 adminWithdraw 取款，其他人不可以。
+    function testAdminWithdrawOnlyAdminCanCall() public {
         _deposit(alice, 1 ether);
         address admin = bank.admin();
         address payable receiver = payable(makeAddr("receiver"));
 
         vm.startPrank(bob);
         vm.expectRevert("Bank: caller is not admin");
-        bank.withdraw(receiver, 0.2 ether);
+        bank.adminWithdraw(receiver, 0.2 ether);
         vm.stopPrank();
 
         uint256 receiverBalanceBefore = receiver.balance;
         uint256 bankBalanceBefore = address(bank).balance;
 
         vm.prank(admin);
-        bank.withdraw(receiver, 0.5 ether);
+        bank.adminWithdraw(receiver, 0.5 ether);
 
         assertEq(address(bank).balance, bankBalanceBefore - 0.5 ether);
         assertEq(receiver.balance, receiverBalanceBefore + 0.5 ether);
     }
 
+    // 检查用户可以成功提取自己的存款。
+    function testUserCanWithdrawOwnBalance() public {
+        _deposit(alice, 1 ether);
+        uint256 bankBalanceBefore = address(bank).balance;
+
+        vm.prank(alice);
+        bank.withdraw(0.6 ether);
+
+        assertEq(bank.balances(alice), 0.4 ether);
+        assertEq(address(bank).balance, bankBalanceBefore - 0.6 ether);
+        assertEq(alice.balance, 0.6 ether);
+    }
+
+    // 检查用户提取超过余额会失败。
+    function testUserWithdrawMoreThanBalanceFails() public {
+        _deposit(alice, 0.5 ether);
+
+        vm.startPrank(alice);
+        vm.expectRevert("Bank: insufficient balance");
+        bank.withdraw(0.6 ether);
+        vm.stopPrank();
+    }
+
     function _deposit(address user, uint256 amount) private {
         vm.deal(user, amount);
         vm.prank(user);
-        (bool success, ) = address(bank).call{value: amount}("");
-        assertTrue(success, "deposit call failed");
+        bank.deposit{value: amount}();
     }
 }

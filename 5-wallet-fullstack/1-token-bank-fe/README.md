@@ -2,13 +2,34 @@
 
 This repo holds the Bank smart contract and the React frontend.
 
-## Contracts
+### Deploy TokenBank with Foundry
 
-The Foundry project lives in the repo root. Run tests with:
-```bash
-forge test
-```
-You can deploy the Bank contract with your own script or use Foundry `forge script`.
+1. Set your RPC URL, private key, and Etherscan key as env vars:
+   ```bash
+   export RPC_URL="https://sepolia.infura.io/v3/YOUR_KEY"
+   export PRIVATE_KEY="0xabc..."
+    export ETHERSCAN_API_KEY="your-etherscan-key"
+   ```
+2. Build the contract:
+   ```bash
+   forge build
+   ```
+3. Deploy with `forge create`:
+   ```bash
+   forge create src/Bank.sol:Bank \
+     --rpc-url "$RPC_URL" \
+     --private-key "$PRIVATE_KEY"
+   ```
+4. Verify the contract on Etherscan:
+   ```bash
+   forge verify-contract \
+     --chain-id 11155111 \
+     --watch \
+     DEPLOYED_ADDRESS \
+     src/Bank.sol:Bank \
+     --etherscan-api-key "$ETHERSCAN_API_KEY"
+   ```
+5. Copy the deployed address into the frontend `.env.local` file.
 
 ## Frontend
 

@@ -6,58 +6,47 @@ import {
   useConnect,
   useDisconnect,
   useReadContract,
-  useSendTransaction,
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi'
+import type { Connector } from 'wagmi'
 import { formatEther, parseEther } from 'viem'
 import type { Address } from 'viem'
 import { bankAbi } from './abi/bank'
 import { bankAddress, isBankConfigured } from './config'
 import './App.css'
 
-const addressPattern = /^0x[a-fA-F0-9]{40}$/
-
 function App() {
   const { address, isConnected } = useAccount()
   const { connect, connectors, error: connectError, isPending: isConnecting } = useConnect()
   const { disconnect } = useDisconnect()
+  const [connectingConnectorId, setConnectingConnectorId] = useState('')
   const [depositAmount, setDepositAmount] = useState('0.01')
   const [depositFormError, setDepositFormError] = useState('')
-  const { sendTransaction, data: depositHash, error: depositError, isPending: isDepositSigning } =
-    useSendTransaction()
+  const {
+    writeContract: writeDepositContract,
+    data: depositHash,
+    error: depositError,
+    isPending: isDepositSigning,
+  } = useWriteContract()
   const depositReceipt = useWaitForTransactionReceipt({ hash: depositHash })
 
-  const [withdrawAmount, setWithdrawAmount] = useState('')
-  const [withdrawRecipient, setWithdrawRecipient] = useState('')
   const [withdrawFormError, setWithdrawFormError] = useState('')
-  const { writeContract, data: withdrawHash, error: withdrawError, isPending: isWithdrawSigning } =
-    useWriteContract()
+  const {
+    writeContract: writeWithdrawContract,
+    data: withdrawHash,
+    error: withdrawError,
+    isPending: isWithdrawSigning,
+  } = useWriteContract()
   const withdrawReceipt = useWaitForTransactionReceipt({ hash: withdrawHash })
-
-  useEffect(() => {
-    if (address && withdrawRecipient.length === 0) {
-      setWithdrawRecipient(address)
-    }
-  }, [address, withdrawRecipient])
 
   const contractAddress: Address | undefined = isBankConfigured ? (bankAddress as Address) : undefined
 
-  const { data: adminAddress } = useReadContract({
-    abi: bankAbi,
-    address: contractAddress,
-    functionName: 'admin',
-    query: {
-      enabled: isBankConfigured,
-    },
-  })
-
-  const isAdmin = useMemo(() => {
-    if (!address || !adminAddress) {
-      return false
+  useEffect(() => {
+    if (!isConnecting) {
+      setConnectingConnectorId('')
     }
-    return address.toLowerCase() === (adminAddress as string).toLowerCase()
-  }, [address, adminAddress])
+  }, [isConnecting])
 
   const {
     data: rawUserBalance,
@@ -98,7 +87,6 @@ function App() {
 
   useEffect(() => {
     if (withdrawReceipt.isSuccess) {
-      setWithdrawAmount('')
       refetchUserBalance()
       refetchBankBalance()
     }
@@ -121,8 +109,10 @@ function App() {
         setDepositFormError('Enter amount bigger than zero.')
         return
       }
-      sendTransaction({
-        to: contractAddress,
+      writeDepositContract({
+        abi: bankAbi,
+        address: contractAddress,
+        functionName: 'deposit',
         value,
       })
     } catch {
@@ -130,8 +120,15 @@ function App() {
     }
   }
 
-  const handleWithdraw = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleConnect = (connector: Connector) => {
+    if (isConnecting) {
+      return
+    }
+    setConnectingConnectorId(connector.uid)
+    connect({ connector })
+  }
+
+  const handleWithdraw = () => {
     setWithdrawFormError('')
     if (!isConnected || !address) {
       setWithdrawFormError('Connect wallet first.')
@@ -141,29 +138,16 @@ function App() {
       setWithdrawFormError('Set bank address in env file.')
       return
     }
-    if (!isAdmin) {
-      setWithdrawFormError('Only admin can withdraw.')
+    if (userBalance === 0n) {
+      setWithdrawFormError('No deposit to withdraw.')
       return
     }
-    if (!addressPattern.test(withdrawRecipient)) {
-      setWithdrawFormError('Enter a valid recipient.')
-      return
-    }
-    try {
-      const value = parseEther(withdrawAmount)
-      if (value <= 0n) {
-        setWithdrawFormError('Enter amount bigger than zero.')
-        return
-      }
-      writeContract({
-        abi: bankAbi,
-        address: contractAddress,
-        functionName: 'withdraw',
-        args: [withdrawRecipient, value],
-      })
-    } catch {
-      setWithdrawFormError('Enter a valid number.')
-    }
+    writeWithdrawContract({
+      abi: bankAbi,
+      address: contractAddress,
+      functionName: 'withdraw',
+      args: [userBalance],
+    })
   }
 
   const depositStatusMessage = useMemo(() => {
@@ -214,6 +198,11 @@ function App() {
     <div className="app">
       <header className="app__header">
         <h1>Token Bank</h1>
+        {isBankConfigured && (
+          <p className="app__contract">
+            Contract: <span>{contractAddress}</span>
+          </p>
+        )}
         <div className="wallet">
           {isConnected ? (
             <>
@@ -223,13 +212,28 @@ function App() {
               </button>
             </>
           ) : (
-            <button
-              className="button"
-              onClick={() => connectors.length > 0 && connect({ connector: connectors[0] })}
-              disabled={isConnecting || connectors.length === 0}
-            >
-              {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-            </button>
+            <div className="wallet__connectors">
+              {connectors.length === 0 && <span className="hint">No wallet connectors found.</span>}
+              {connectors.map((connector) => {
+                const isActive = connectingConnectorId === connector.uid && isConnecting
+                return (
+                  <div key={connector.uid} className="wallet__connector">
+                    <div className="wallet__connector-row">
+                      <div className="wallet__connector-meta">
+                        <strong>{connector.name}</strong>
+                      </div>
+                      <button
+                        className="button button--outline"
+                        onClick={() => handleConnect(connector)}
+                        disabled={isConnecting && !isActive}
+                      >
+                        {isActive ? 'Connecting...' : 'Connect'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
         {connectError && <p className="status status--error">{connectError.message}</p>}
@@ -273,39 +277,17 @@ function App() {
       </section>
 
       <section className="card">
-        <h2>Withdraw (admin only)</h2>
-        <form className="form" onSubmit={handleWithdraw}>
-          <label className="form__row">
-            <span>Recipient</span>
-            <input
-              value={withdrawRecipient}
-              onChange={(event) => setWithdrawRecipient(event.target.value)}
-              placeholder="0x..."
-              type="text"
-            />
-          </label>
-          <label className="form__row">
-            <span>Amount (ETH)</span>
-            <input
-              value={withdrawAmount}
-              onChange={(event) => setWithdrawAmount(event.target.value)}
-              placeholder="0.1"
-              type="text"
-            />
-          </label>
-          <button
-            className="button"
-            type="submit"
-            disabled={!isAdmin || isWithdrawSigning || withdrawReceipt.isLoading}
-            title={isAdmin ? '' : 'Only the admin wallet can run this call.'}
-          >
-            {isWithdrawSigning || withdrawReceipt.isLoading ? 'Processing...' : 'Withdraw'}
-          </button>
-        </form>
+        <h2>Withdraw</h2>
+        <p className="hint">Withdraw sends your full deposit back to your wallet.</p>
+        <button
+          className="button"
+          type="button"
+          onClick={handleWithdraw}
+          disabled={userBalance === 0n || isWithdrawSigning || withdrawReceipt.isLoading}
+        >
+          {isWithdrawSigning || withdrawReceipt.isLoading ? 'Processing...' : `Withdraw ${formattedUserBalance} ETH`}
+        </button>
         {withdrawStatusMessage && <p className="status">{withdrawStatusMessage}</p>}
-        {!isAdmin && isConnected && (
-          <p className="hint">You are not the admin wallet. Withdraw will fail.</p>
-        )}
       </section>
     </div>
   )

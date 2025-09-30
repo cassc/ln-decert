@@ -1,6 +1,6 @@
 const DEFAULT_CHAIN_ID = 11_155_111;
 const DEFAULT_CHAIN_NAME = 'Sepolia Testnet';
-const DEFAULT_RPC_URL = 'https://rpc.sepolia.org';
+const DEFAULT_RPC_URL = 'https://1rpc.io/sepolia';
 
 const rawChainId = Number.parseInt(import.meta.env.VITE_CHAIN_ID ?? '', 10);
 export const chainId = Number.isNaN(rawChainId) ? DEFAULT_CHAIN_ID : rawChainId;

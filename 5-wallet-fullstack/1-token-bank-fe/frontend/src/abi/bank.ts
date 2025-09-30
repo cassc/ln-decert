@@ -22,7 +22,21 @@ export const bankAbi = [
   },
   {
     type: 'function',
+    name: 'deposit',
+    stateMutability: 'payable',
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: 'function',
     name: 'withdraw',
+    stateMutability: 'nonpayable',
+    inputs: [{ type: 'uint256', name: 'amount' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'adminWithdraw',
     stateMutability: 'nonpayable',
     inputs: [
       { type: 'address payable', name: 'to' },
@@ -41,7 +55,16 @@ export const bankAbi = [
   },
   {
     type: 'event',
-    name: 'Withdraw',
+    name: 'UserWithdraw',
+    inputs: [
+      { indexed: true, internalType: 'address', name: 'account', type: 'address' },
+      { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'AdminWithdraw',
     inputs: [
       { indexed: true, internalType: 'address', name: 'to', type: 'address' },
       { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' },
