@@ -1,10 +1,11 @@
 import { Command } from 'commander';
 import { promises as fs } from 'node:fs';
-import { erc20Abi, parseUnits } from 'viem';
+import { erc20Abi, parseUnits, encodeFunctionData } from 'viem';
 import { appConfig } from '../config';
 import { loadStoredAccount } from '../services/wallet';
 import { getPublicClient } from '../services/viemClients';
 import { getTokenMetadata } from '../services/token';
+import { stringifyWithBigInt } from '../utils/serialization';
 
 const assertHexAddress = (value: string, label: string): `0x${string}` => {
   if (!value || !value.startsWith('0x')) {
@@ -21,14 +22,16 @@ export const registerPrepareTransferCommand = (program: Command) => {
     .requiredOption('-a, --amount <amount>', 'Token amount to send (human readable)')
     .option('-d, --decimals <decimals>', 'Token decimals override')
     .option('-o, --output <file>', 'Write the prepared transaction JSON to a file')
+    .option('-p, --password <password>', 'Password to decrypt the stored wallet')
     .action(async (options: {
       to: string;
       amount: string;
       decimals?: string;
       output?: string;
+      password?: string;
     }) => {
       try {
-        const account = await loadStoredAccount();
+        const account = await loadStoredAccount({ password: options.password });
         const client = getPublicClient();
         const tokenAddress = appConfig.requireErc20TokenAddress() as `0x${string}`;
         const { decimals } = await getTokenMetadata(client, tokenAddress);
@@ -43,12 +46,28 @@ export const registerPrepareTransferCommand = (program: Command) => {
         const value = parseUnits(options.amount, effectiveDecimals);
         const to = assertHexAddress(options.to, 'recipient address');
 
-        const simulation = await client.simulateContract({
+        // Encode the contract function call data
+        const data = encodeFunctionData({
+          abi: erc20Abi,
+          functionName: 'transfer',
+          args: [to, value],
+        });
+
+        // Simulate the contract call to validate
+        await client.simulateContract({
           address: tokenAddress,
           abi: erc20Abi,
           functionName: 'transfer',
           args: [to, value],
           account,
+        });
+
+        // Prepare the complete transaction request with EIP-1559 parameters
+        const request = await client.prepareTransactionRequest({
+          account,
+          to: tokenAddress,
+          data,
+          type: 'eip1559',
         });
 
         const payload = {
@@ -58,10 +77,10 @@ export const registerPrepareTransferCommand = (program: Command) => {
           to,
           amount: options.amount,
           decimals: effectiveDecimals,
-          request: simulation.request,
+          request,
         };
 
-        const serialized = JSON.stringify(payload, null, 2);
+        const serialized = stringifyWithBigInt(payload, 2);
 
         if (options.output) {
           await fs.writeFile(options.output, serialized, 'utf8');
