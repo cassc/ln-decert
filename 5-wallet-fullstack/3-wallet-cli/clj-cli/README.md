@@ -3,6 +3,7 @@
 This small Clojure tool lets you:
 
 - create a fresh private key and store it locally
+- reveal the private key stored in a wallet JSON/keystore file
 - check ETH and ERC20 balance through an RPC URL
 - build and sign an ERC20 EIP-1559 transfer and optionally send it to Sepolia
 
@@ -17,6 +18,14 @@ This small Clojure tool lets you:
 ```bash
 clojure -P
 ```
+
+## Build an uberjar
+
+```bash
+clojure -T:uber
+```
+
+This creates `wallet.jar` in the project root. Run it with `java -jar wallet.jar <command>` using the same arguments you would pass to `wallet.core`.
 
 ## Generate a key
 
@@ -52,6 +61,14 @@ clojure -M -m wallet.core transfer \
 The tool fetches nonce, gas data, builds an EIP-1559 transaction, signs it with the key from the JSON file, and sends it to Sepolia. Remove `--send` when you only need the signed raw transaction hex.
 
 Use `--password` when your key file is encrypted.
+
+## Show the private key
+
+```bash
+clojure -M -m wallet.core show-key --key-file wallet-account.json
+```
+
+Add `--password my-secret` when the key file is encrypted.
 
 ## Notes
 

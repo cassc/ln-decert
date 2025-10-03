@@ -11,3 +11,6 @@ broadcast/
 .wallet.json
 .nrepl-port
 .calva/
+.cache/
+.cpcache/
+wallet-account.json 

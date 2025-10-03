@@ -6,7 +6,7 @@
  :aliases {:run {:exec-fn wallet.core/main
                  :exec-args {}}
            :uber {:deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
-                  :exec-fn hf.depstar.uberjar
+                  :exec-fn hf.depstar.uberjar/uberjar
                   :exec-args {:jar "wallet.jar"
                               :aot true
                               :main-class "wallet.core"}}}}

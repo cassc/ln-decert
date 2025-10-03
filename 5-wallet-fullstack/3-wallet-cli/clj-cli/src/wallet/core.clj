@@ -83,6 +83,18 @@
 (defn web3 [rpc]
   (Web3j/build (HttpService. rpc)))
 
+(defn throw-rpc-error [resp]
+  (let [err (.getError resp)
+        msg (some-> err .getMessage)
+        code (some-> err .getCode)
+        data (some-> err .getData)
+        payload (cond-> {}
+                  msg (assoc :message msg)
+                  code (assoc :code code)
+                  data (assoc :data data))
+        ex-msg (str "RPC error" (when msg (str ": " msg)))]
+    (throw (ex-info ex-msg payload))))
+
 (defn wei->eth [wei]
   (.toPlainString (Convert/fromWei (BigDecimal. wei) Convert$Unit/ETHER)))
 
@@ -97,14 +109,14 @@
 (defn fetch-eth-balance [w3 address]
   (let [resp (.send (.ethGetBalance w3 address DefaultBlockParameterName/LATEST))]
     (if (.hasError resp)
-      (throw (ex-info "RPC error" {:message (.getMessage (.getError resp))}))
+      (throw-rpc-error resp)
       (.getBalance resp))))
 
 (defn call-contract [w3 from to data]
   (let [tx (Transaction/createEthCallTransaction from to data)
         resp (.send (.ethCall w3 tx DefaultBlockParameterName/LATEST))]
     (if (.hasError resp)
-      (throw (ex-info "RPC error" {:message (.getMessage (.getError resp))}))
+      (throw-rpc-error resp)
       (.getResult resp))))
 
 (defn decode-uint256 [hex]
@@ -147,12 +159,11 @@
 (defn latest-block [w3]
   (let [resp (.send (.ethGetBlockByNumber w3 DefaultBlockParameterName/LATEST false))]
     (if (.hasError resp)
-      (throw (ex-info "RPC error" {:message (.getMessage (.getError resp))}))
+      (throw-rpc-error resp)
       (.getBlock resp))))
 
 (defn base-fee [^EthBlock$Block block]
-  (let [value (.getBaseFeePerGas block)]
-    (if value (Numeric/decodeQuantity value) BigInteger/ZERO)))
+  (.getBaseFeePerGas block))
 
 (defn max-priority-fee [w3]
   (try
@@ -165,7 +176,7 @@
 (defn nonce [w3 address]
   (let [resp (.send (.ethGetTransactionCount w3 address DefaultBlockParameterName/PENDING))]
     (if (.hasError resp)
-      (throw (ex-info "RPC error" {:message (.getMessage (.getError resp))}))
+      (throw-rpc-error resp)
       (.getTransactionCount resp))))
 
 (defn parse-long* [v default]
@@ -186,7 +197,7 @@
 (defn send-raw [w3 hex]
   (let [resp (.send (.ethSendRawTransaction w3 hex))]
     (if (.hasError resp)
-      (throw (ex-info "RPC error" {:message (.getMessage (.getError resp))}))
+      (throw-rpc-error resp)
       (.getTransactionHash resp))))
 
 (defn build-transfer [{:keys [rpc key-file private-key password token to amount decimals gas-limit max-priority max-fee chain-id send?]}]
@@ -239,23 +250,29 @@
               ["-a" "--amount VALUE" "Token amount"]
               ["-d" "--decimals N" "Token decimals" :parse-fn #(Integer/parseInt %)]
               ["-g" "--gas-limit N" "Gas limit" :default 100000]
-              ["--max-priority GWEI" "Max priority fee in gwei"]
-              ["--max-fee GWEI" "Max fee in gwei"]
-              ["--password PASS" "Wallet password"]
+              [nil "--max-priority GWEI" "Max priority fee in gwei"]
+              [nil "--max-fee GWEI" "Max fee in gwei"]
+              [nil "--password PASS" "Wallet password"]
               ["-c" "--chain-id N" "Chain id" :default 11155111]
-              ["-s" "--send" "Send transaction" :default false :flag true]]})
+              ["-s" "--send" "Send transaction" :default false]]
+   :show-key [["-k" "--key-file FILE" "Key JSON file" :default default-key-file]
+              [nil "--password PASS" "Wallet password"]]})
 
 (defn usage []
   (str "wallet <command> [options]\n\n"
        "Commands:\n"
        "  keygen     Generate and store a private key\n"
        "  balance    Query ETH or ERC20 balance\n"
-       "  transfer   Build, sign, and optionally send ERC20 transfer\n"))
+       "  transfer   Build, sign, and optionally send ERC20 transfer\n"
+       "  show-key   Display the private key stored in a key file\n"))
 
-(defn exit [status msg]
-  (binding [*out* (if (zero? status) *out* *err*)]
-    (println msg))
-  (System/exit status))
+(def exit-key ::exit)
+
+(defn exit
+  ([status msg]
+   (exit status msg nil))
+  ([status msg cause]
+   (throw (ex-info msg {:status status exit-key true} cause))))
 
 (defn handle-keygen [args]
   (let [{:keys [options errors]} (parse-opts args (:keygen cli-options))]
@@ -270,10 +287,20 @@
 (defn handle-transfer [args]
   (let [{:keys [options errors]} (parse-opts args (:transfer cli-options))]
     (when errors (exit 1 (first errors)))
+    (build-transfer (assoc options :send? (:send options)))))
+
+(defn handle-show-key [args]
+  (let [{:keys [options errors]} (parse-opts args (:show-key cli-options))]
+    (when errors (exit 1 (first errors)))
     (try
-      (build-transfer (assoc options :send? (:send options)))
+      (let [creds (load-credentials (select-keys options [:key-file :password]))
+            kp (.getEcKeyPair creds)
+            address (format-address kp)
+            priv (format-private-key kp)]
+        (println "Address:" address)
+        (println "Private key:" priv))
       (catch Exception e
-        (exit 1 (str "Transfer failed: " (.getMessage e)))))))
+        (exit 1 (str "Failed to load key: " (.getMessage e)) e)))))
 
 (defn main [& args]
   (let [[command & rest] args]
@@ -282,6 +309,7 @@
         "keygen" (handle-keygen rest)
         "balance" (handle-balance rest)
         "transfer" (handle-transfer rest)
+        "show-key" (handle-show-key rest)
         (exit 1 (usage)))
       (catch Exception e
         (exit 1 (str (.getMessage e)))))))
@@ -293,6 +321,25 @@
 
   ;; generate wallet with password
   (handle-keygen ["-o" "wallet-account.json" "-P" "testpassword"])
+
+  ;; get the private key 
+  (handle-show-key ["-k" "wallet-account.json" "--password" "testpassword"])
+
+  (handle-balance ["-r" "https://1rpc.io/sepolia"
+                   "-a" "0xac08Ac9D8F609aF09Ec5F976c32ff202c95460a5"
+                   "-t" "0x4Af5347243f5845cFe7a102e651e661eC1Ce7437"])
+  
+  (handle-transfer ["-r" "https://1rpc.io/sepolia"
+                    "-k" "wallet-account.json"
+                    "--password" "testpassword"
+                    "-t" "0x4Af5347243f5845cFe7a102e651e661eC1Ce7437"
+                    "-o" "0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE"
+                    "-a" "10"
+                    "-d" "1"
+                    "-c" "11155111"
+                    "--max-priority" "2"
+                    "--max-fee" "20"
+                    "-s"])
 
   ;; load wallet credentials
   (let [creds (wallet.core/load-credentials {:key-file "wallet-account.json"
