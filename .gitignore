@@ -9,3 +9,5 @@ out/
 broadcast/
 .envrc
 .wallet.json
+.nrepl-port
+.calva/
