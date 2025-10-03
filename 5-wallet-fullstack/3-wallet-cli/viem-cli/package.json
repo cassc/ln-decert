@@ -1,0 +1,33 @@
+{
+  "name": "viem-cli",
+  "version": "1.0.0",
+  "description": "Command-line wallet for Sepolia ERC20 transfers powered by Viem",
+  "main": "dist/cli.js",
+  "bin": {
+    "viem-wallet": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "dev": "ts-node src/cli.ts",
+    "start": "node dist/cli.js"
+  },
+  "keywords": [
+    "viem",
+    "wallet",
+    "cli",
+    "sepolia"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^14.0.1",
+    "dotenv": "^17.2.3",
+    "viem": "^2.37.11"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@10.17.1"
+}

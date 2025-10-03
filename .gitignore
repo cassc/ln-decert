@@ -1,11 +1,11 @@
-big-bank/cache/
-big-bank/out/
 
 # VS Code: keep shared project settings, ignore personal configs
 .vscode/*
 !.vscode/settings.json
 
 # Foundry build artifacts
-4-foundry/**/cache/
-4-foundry/**/out/
-4-foundry/**/broadcast/
+cache/
+out/
+broadcast/
+.envrc
+.wallet.json
