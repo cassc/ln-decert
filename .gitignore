@@ -9,3 +9,7 @@ big-bank/out/
 4-foundry/**/cache/
 4-foundry/**/out/
 4-foundry/**/broadcast/
+5-wallet-fullstack/clj/wallet-account.json
+5-wallet-fullstack/clj/.nrepl-port
+5-wallet-fullstack/clj/.nrepl-port
+5-wallet-fullstack/clj/.calva/output-window/output.calva-repl
