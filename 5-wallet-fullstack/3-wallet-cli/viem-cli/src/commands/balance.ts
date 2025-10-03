@@ -9,9 +9,10 @@ export const registerBalanceCommand = (program: Command) => {
   program
     .command('balance')
     .description('Show the wallet balance for the configured ERC20 token and native ETH')
-    .action(async () => {
+    .option('-p, --password <password>', 'Password to decrypt the stored wallet')
+    .action(async (options: { password?: string }) => {
       try {
-        const account = await loadStoredAccount();
+        const account = await loadStoredAccount({ password: options.password });
         const client = getPublicClient();
         const tokenAddress = appConfig.requireErc20TokenAddress() as `0x${string}`;
 

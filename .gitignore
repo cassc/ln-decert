@@ -9,3 +9,10 @@ out/
 broadcast/
 .envrc
 .wallet.json
+.nrepl-port
+.calva/
+.cache/
+.cpcache/
+wallet-account.json 
+5-wallet-fullstack/3-wallet-cli/viem-cli/signed.json
+5-wallet-fullstack/3-wallet-cli/viem-cli/prepared.json
