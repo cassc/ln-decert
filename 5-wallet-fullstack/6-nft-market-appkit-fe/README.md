@@ -2,6 +2,14 @@
 
 A complete fullstack NFT marketplace with Solidity smart contracts, backend event listener, and Next.js frontend integrated with AppKit/WalletConnect.
 
+## Demo
+
+<video width="100%" controls>
+  <source src="./nft-demo.mp4" type="video/mp4">
+  Your browser does not support the video tag. <a href="./nft-demo.mp4">Click here to download the demo video</a>.
+</video>
+
+
 ## Project Structure
 
 ```
