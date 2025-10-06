@@ -4,10 +4,9 @@ A complete fullstack NFT marketplace with Solidity smart contracts, backend even
 
 ## Demo
 
-<video width="100%" controls>
-  <source src="./nft-demo.mp4" type="video/mp4">
-  Your browser does not support the video tag. <a href="./nft-demo.mp4">Click here to download the demo video</a>.
-</video>
+[![NFT Marketplace Demo](https://img.shields.io/badge/▶️_Watch_Demo-NFT_Marketplace-blue?style=for-the-badge&logo=video)](./nft-demo.mp4)
+
+
 
 
 ## Project Structure
