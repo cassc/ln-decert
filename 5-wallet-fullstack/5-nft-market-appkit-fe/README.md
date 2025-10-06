@@ -96,7 +96,8 @@ The listener outputs JSON logs for `Listed` and `Purchase` events.
    # - NEXT_PUBLIC_NFT_MARKET_ADDRESS=deployed_market_address
    # - NEXT_PUBLIC_NFT_ADDRESS=deployed_nft_address
    # - NEXT_PUBLIC_TOKEN_ADDRESS=deployed_token_address
-   ```
+   # Note: Set NEXT_PUBLIC_MARKET_START_BLOCK to the deployment block of the marketplace to preload existing listings.
+  ```
 
 3. **Run development server:**
    ```bash

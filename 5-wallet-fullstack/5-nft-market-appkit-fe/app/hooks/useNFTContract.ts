@@ -1,6 +1,7 @@
 'use client'
 
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useState, useCallback } from 'react'
+import { useAccount, useReadContract, useWaitForTransactionReceipt, useWalletClient } from 'wagmi'
 import { CONTRACTS } from '../config/contracts'
 import { Address } from 'viem'
 
@@ -38,19 +39,51 @@ export function useNFTTokenURI(tokenId: bigint | undefined) {
 }
 
 export function useNFTApprove() {
-  const { data: hash, writeContract, isPending, error } = useWriteContract()
+  const { address } = useAccount()
+  const { data: walletClient } = useWalletClient()
+
+  const [hash, setHash] = useState<`0x${string}` | undefined>(undefined)
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash,
+    query: { enabled: !!hash },
   })
 
-  const approve = (to: Address, tokenId: bigint) => {
-    writeContract({
-      ...CONTRACTS.DecentMarketNFT,
-      functionName: 'approve',
-      args: [to, tokenId],
-    })
-  }
+  const approve = useCallback(
+    async (to: Address, tokenId: bigint) => {
+      if (!address) {
+        throw new Error('Wallet not connected')
+      }
+      if (!walletClient) {
+        throw new Error('Wallet client unavailable')
+      }
+
+      setIsPending(true)
+      setError(null)
+      setHash(undefined)
+
+      try {
+        const txHash = await walletClient.writeContract({
+          address: CONTRACTS.DecentMarketNFT.address,
+          abi: CONTRACTS.DecentMarketNFT.abi,
+          functionName: 'approve',
+          args: [to, tokenId],
+          account: address as Address,
+        })
+
+        setHash(txHash)
+        return txHash
+      } catch (err) {
+        setError(err as Error)
+        throw err
+      } finally {
+        setIsPending(false)
+      }
+    },
+    [address, walletClient],
+  )
 
   return {
     approve,

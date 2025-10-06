@@ -25,6 +25,8 @@ contract NFTMarket is IERC777Recipient, ERC721Holder, ReentrancyGuard {
     DecentMarketToken public immutable paymentToken;
 
     mapping(address nft => mapping(uint256 tokenId => Listing)) private _listings;
+    // TODO: Track active listing keys (e.g., EnumerableSet) so the frontend can query without event history.
+    // TODO: Emit aggregation-friendly metadata (like total listings) once active listing tracking exists.
 
     constructor(DecentMarketToken token) {
         paymentToken = token;
@@ -41,6 +43,7 @@ contract NFTMarket is IERC777Recipient, ERC721Holder, ReentrancyGuard {
 
         collection.safeTransferFrom(msg.sender, address(this), tokenId);
         _listings[nft][tokenId] = Listing({seller: msg.sender, price: price});
+        // TODO: Push key into active listings set for O(1) lookups.
 
         emit Listed(msg.sender, nft, tokenId, price);
     }
@@ -54,6 +57,7 @@ contract NFTMarket is IERC777Recipient, ERC721Holder, ReentrancyGuard {
         require(paid, "Token transfer failed");
 
         IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
+        // TODO: Remove key from active listings set to keep on-chain index consistent.
 
         emit Purchase(msg.sender, listing.seller, nft, tokenId, listing.price);
     }
@@ -64,6 +68,7 @@ contract NFTMarket is IERC777Recipient, ERC721Holder, ReentrancyGuard {
         require(listing.seller == msg.sender, "Not seller");
 
         delete _listings[nft][tokenId];
+        // TODO: Remove key from active listings set when seller unlists.
 
         IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
 
@@ -95,6 +100,7 @@ contract NFTMarket is IERC777Recipient, ERC721Holder, ReentrancyGuard {
         require(forwarded, "Forward failed");
 
         IERC721(nft).safeTransferFrom(address(this), from, tokenId);
+        // TODO: On ERC777 purchase, ensure active listings index is also updated/removed.
 
         emit Purchase(from, listing.seller, nft, tokenId, amount);
     }
@@ -103,5 +109,6 @@ contract NFTMarket is IERC777Recipient, ERC721Holder, ReentrancyGuard {
         listing = _listings[nft][tokenId];
         require(listing.seller != address(0), "Not listed");
         delete _listings[nft][tokenId];
+        // TODO: Factor out index cleanup once active listings tracking is added.
     }
 }

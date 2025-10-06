@@ -8,7 +8,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "outDir": "dist",
-    "rootDir": "listener",
     "resolveJsonModule": true,
     "lib": [
       "dom",
