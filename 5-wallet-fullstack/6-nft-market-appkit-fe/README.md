@@ -7,6 +7,7 @@ A complete fullstack NFT marketplace with Solidity smart contracts, backend even
 [![NFT Marketplace Demo](https://img.shields.io/badge/▶️_Watch_Demo-NFT_Marketplace-blue?style=for-the-badge&logo=video)](./nft-demo.mp4)
 
 
+![NFT Marketplace Screenshot](./nft-demo.png)
 
 
 ## Project Structure
