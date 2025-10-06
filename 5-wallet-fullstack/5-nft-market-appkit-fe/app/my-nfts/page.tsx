@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAccount, useQueryClient, useWatchContractEvent } from 'wagmi'
+import { useAccount, useWatchContractEvent } from 'wagmi'
+import { useQueryClient } from '@tanstack/react-query'
 import { parseEther } from 'viem'
 import { NFTCard } from '../components/NFTCard'
 import { useNFTBalance, useNFTApprove, useNFTApprovalStatus, useNFTOwner, useNextTokenId } from '../hooks/useNFTContract'
