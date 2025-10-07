@@ -81,6 +81,12 @@ function App() {
   const [permitBuyStatus, setPermitBuyStatus] = useState('');
   const [nftItems, setNftItems] = useState<NftItem[]>([]);
   const [isLoadingNfts, setIsLoadingNfts] = useState(false);
+  const [whitelistBuyerAddress, setWhitelistBuyerAddress] = useState('');
+  const [whitelistTokenId, setWhitelistTokenId] = useState('');
+  const [whitelistPrice, setWhitelistPrice] = useState('');
+  const [whitelistDeadline, setWhitelistDeadline] = useState('');
+  const [whitelistStatus, setWhitelistStatus] = useState('');
+  const [generatedSignature, setGeneratedSignature] = useState('');
 
   const tokenNameQuery = useReadContract({
     abi: tokenAbi,
@@ -178,6 +184,9 @@ function App() {
   const nextTokenId = typeof nftNextIdQuery.data === 'bigint' ? Number(nftNextIdQuery.data) : 0;
   const nftOwner = nftOwnerQuery.data as Address | undefined;
   const isNftOwner = Boolean(address && nftOwner && address.toLowerCase() === nftOwner.toLowerCase());
+  const isWhitelistSigner = Boolean(
+    address && whitelistSignerAddress && address.toLowerCase() === whitelistSignerAddress.toLowerCase()
+  );
 
   const refreshBalances = useCallback(() => {
     walletTokenBalanceQuery.refetch?.();
@@ -532,6 +541,77 @@ function App() {
     }
   };
 
+  const handleGenerateWhitelistSignature = async () => {
+    setWhitelistStatus('');
+    setGeneratedSignature('');
+    try {
+      ensureContext();
+      if (!marketAddress || !nftAddress) {
+        throw new Error('Marketplace not configured.');
+      }
+      if (!isWhitelistSigner) {
+        throw new Error('Only the whitelist signer can generate signatures.');
+      }
+      const addressRegex = /^0x[a-fA-F0-9]{40}$/;
+      if (!whitelistBuyerAddress || !addressRegex.test(whitelistBuyerAddress)) {
+        throw new Error('Enter a valid buyer address.');
+      }
+      const tokenIdNumeric = Number.parseInt(whitelistTokenId, 10);
+      if (Number.isNaN(tokenIdNumeric)) {
+        throw new Error('Enter a valid token id.');
+      }
+      const price = parseUnits(whitelistPrice, tokenDecimals);
+      if (price <= 0n) {
+        throw new Error('Enter a price greater than zero.');
+      }
+      let deadlineSec: bigint;
+      if (whitelistDeadline.trim().length > 0) {
+        const parsed = Number.parseInt(whitelistDeadline, 10);
+        if (Number.isNaN(parsed)) {
+          throw new Error('Enter a valid deadline.');
+        }
+        deadlineSec = BigInt(parsed);
+      } else {
+        deadlineSec = BigInt(Math.floor(Date.now() / 1000) + 3600);
+      }
+
+      const domainChainId = activeChainId ?? configuredChainId;
+
+      setWhitelistStatus('Signing whitelist permit...');
+      const signature = await signTypedDataAsync({
+        domain: {
+          name: 'PermitNFTMarket',
+          version: '1',
+          chainId: Number(domainChainId),
+          verifyingContract: marketAddress,
+        },
+        types: {
+          PermitBuy: [
+            { name: 'buyer', type: 'address' },
+            { name: 'nft', type: 'address' },
+            { name: 'tokenId', type: 'uint256' },
+            { name: 'price', type: 'uint256' },
+            { name: 'deadline', type: 'uint256' },
+          ],
+        },
+        primaryType: 'PermitBuy',
+        message: {
+          buyer: whitelistBuyerAddress as Address,
+          nft: nftAddress,
+          tokenId: BigInt(tokenIdNumeric),
+          price,
+          deadline: deadlineSec,
+        },
+      });
+
+      setGeneratedSignature(signature);
+      setWhitelistStatus('Signature generated! Copy and share with the buyer.');
+    } catch (error) {
+      console.error(error);
+      setWhitelistStatus(error instanceof Error ? error.message : 'Signature generation failed.');
+    }
+  };
+
   const activeChainLabel = useMemo(() => {
     const chain = activeChainId ?? configuredChainId;
     return `Chain ID: ${chain}`;
@@ -716,23 +796,24 @@ function App() {
               </button>
               {nftApprovalStatus && <p className="status">{nftApprovalStatus}</p>}
             </div>
-            <div className="form">
-              <h3>Mint (owner only)</h3>
-              <label className="form__row">
-                <span>Token URI</span>
-                <input
-                  value={mintUri}
-                  onChange={(event) => setMintUri(event.target.value)}
-                  placeholder="ipfs://..."
-                  type="text"
-                />
-              </label>
-              <button className="button" type="button" onClick={handleMintNft} disabled={!isNftOwner}>
-                Mint NFT
-              </button>
-              {!isNftOwner && <span className="hint">Only the NFT contract owner can mint.</span>}
-              {mintStatus && <p className="status">{mintStatus}</p>}
-            </div>
+            {isNftOwner && (
+              <div className="form">
+                <h3>Mint (owner only)</h3>
+                <label className="form__row">
+                  <span>Token URI</span>
+                  <input
+                    value={mintUri}
+                    onChange={(event) => setMintUri(event.target.value)}
+                    placeholder="ipfs://..."
+                    type="text"
+                  />
+                </label>
+                <button className="button" type="button" onClick={handleMintNft}>
+                  Mint NFT
+                </button>
+                {mintStatus && <p className="status">{mintStatus}</p>}
+              </div>
+            )}
           </div>
           <div className="card__column">
             <h3>List existing NFT</h3>
@@ -808,10 +889,82 @@ function App() {
           </button>
           {permitBuyStatus && <p className="status">{permitBuyStatus}</p>}
           <span className="hint">
-            Obtain the signature from the project team. They sign the PermitBuy typed data for approved wallets.
+            Obtain ALL parameters (token ID, price, deadline, signature) from the whitelist signer. All values must match exactly what was signed.
           </span>
         </div>
       </section>
+
+      {isWhitelistSigner && (
+        <section className="card">
+          <h2>Generate whitelist signature (Signer only)</h2>
+          <p className="hint">
+            As the whitelist signer, you can generate signatures to authorize specific buyers to purchase NFTs.
+          </p>
+          <p className="hint" style={{ color: '#f59e0b', fontWeight: 'bold' }}>
+            ⚠️ Important: Share ALL parameters (buyer address, token ID, price, deadline) along with the signature. The buyer needs every detail to complete the purchase.
+          </p>
+          <div className="form">
+            <label className="form__row">
+              <span>Buyer address</span>
+              <input
+                value={whitelistBuyerAddress}
+                onChange={(event) => setWhitelistBuyerAddress(event.target.value)}
+                placeholder="0x..."
+                type="text"
+              />
+            </label>
+            <label className="form__row">
+              <span>Token ID</span>
+              <input
+                value={whitelistTokenId}
+                onChange={(event) => setWhitelistTokenId(event.target.value)}
+                placeholder="0"
+                type="text"
+              />
+            </label>
+            <label className="form__row">
+              <span>Price ({tokenSymbol})</span>
+              <input
+                value={whitelistPrice}
+                onChange={(event) => setWhitelistPrice(event.target.value)}
+                placeholder="1"
+                type="text"
+              />
+            </label>
+            <label className="form__row">
+              <span>Deadline (unix seconds, optional)</span>
+              <input
+                value={whitelistDeadline}
+                onChange={(event) => setWhitelistDeadline(event.target.value)}
+                placeholder="Defaults to +1 hour"
+                type="text"
+              />
+            </label>
+            <button className="button" type="button" onClick={handleGenerateWhitelistSignature}>
+              Generate signature
+            </button>
+            {whitelistStatus && <p className="status">{whitelistStatus}</p>}
+            {generatedSignature && (
+              <div>
+                <label className="form__row">
+                  <span>Generated signature (share with buyer)</span>
+                  <textarea
+                    value={generatedSignature}
+                    readOnly
+                    rows={3}
+                    style={{ fontFamily: 'monospace', fontSize: '0.85em' }}
+                    onClick={(e) => {
+                      e.currentTarget.select();
+                      navigator.clipboard.writeText(generatedSignature);
+                    }}
+                  />
+                </label>
+                <span className="hint">Click the signature to copy it to clipboard.</span>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="card">
         <h2>Minted NFTs ({nextTokenId})</h2>
