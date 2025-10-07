@@ -130,13 +130,24 @@ contract NFTMarket is ERC721Holder, ReentrancyGuard, EIP712, Ownable {
         return _hashTypedDataV4(keccak256(abi.encode(_PERMIT_BUY_TYPEHASH, buyer, nft, tokenId, price, deadline)));
     }
 
-    /// @notice Buy a listed NFT using a whitelist signature issued off-chain by the project owner.
+    /// @notice Buy a listed NFT using a whitelist signature and EIP-2612 permit for gasless token approval.
+    /// @param nft The NFT contract address
+    /// @param tokenId The token ID to purchase
+    /// @param price The expected price
+    /// @param deadline Expiry timestamp for both whitelist and token permit signatures
+    /// @param whitelistSignature Signature from whitelistSigner authorizing this purchase
+    /// @param v EIP-2612 permit signature v
+    /// @param r EIP-2612 permit signature r
+    /// @param s EIP-2612 permit signature s
     function permitBuy(
         address nft,
         uint256 tokenId,
         uint256 price,
         uint256 deadline,
-        bytes calldata signature
+        bytes calldata whitelistSignature,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) external nonReentrant {
         Listing memory listing = _listings[nft][tokenId];
         require(listing.seller != address(0), "NFTMarket: not listed");
@@ -149,13 +160,16 @@ contract NFTMarket is ERC721Holder, ReentrancyGuard, EIP712, Ownable {
         );
         require(!_consumedPermits[digest], "NFTMarket: permit used");
 
-        address signer = ECDSA.recover(digest, signature);
+        address signer = ECDSA.recover(digest, whitelistSignature);
         require(signer == whitelistSigner, "NFTMarket: invalid signer");
 
         _consumedPermits[digest] = true;
 
         delete _listings[nft][tokenId];
         _removeFromListedTokenIds(nft, tokenId);
+
+        // Use EIP-2612 permit to approve tokens before transfer
+        paymentToken.permit(msg.sender, address(this), listing.price, deadline, v, r, s);
 
         bool paid = paymentToken.transferFrom(msg.sender, listing.seller, listing.price);
         require(paid, "NFTMarket: payment failed");

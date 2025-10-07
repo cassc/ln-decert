@@ -66,6 +66,10 @@ function App() {
   const [depositStatus, setDepositStatus] = useState('');
   const [withdrawStatus, setWithdrawStatus] = useState('');
   const [permitDepositDeadline, setPermitDepositDeadline] = useState('');
+  const [permitDepositSignature, setPermitDepositSignature] = useState('');
+  const [permitDepositJsonInput, setPermitDepositJsonInput] = useState('');
+  const [generatedDepositPermit, setGeneratedDepositPermit] = useState('');
+  const [permitDepositOwner, setPermitDepositOwner] = useState('');
   const [tokenApprovalAmount, setTokenApprovalAmount] = useState('5');
   const [tokenApprovalStatus, setTokenApprovalStatus] = useState('');
   const [mintUri, setMintUri] = useState('ipfs://sample-nft.json');
@@ -79,6 +83,7 @@ function App() {
   const [permitBuyDeadline, setPermitBuyDeadline] = useState('');
   const [permitBuySignature, setPermitBuySignature] = useState('');
   const [permitBuyStatus, setPermitBuyStatus] = useState('');
+  const [permitBuyJsonInput, setPermitBuyJsonInput] = useState('');
   const [nftItems, setNftItems] = useState<NftItem[]>([]);
   const [isLoadingNfts, setIsLoadingNfts] = useState(false);
   const [whitelistBuyerAddress, setWhitelistBuyerAddress] = useState('');
@@ -277,9 +282,10 @@ function App() {
     };
   }, [address, publicClient]);
 
-  const handlePermitDeposit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleGenerateDepositPermit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setDepositStatus('');
+    setGeneratedDepositPermit('');
     try {
       const { rpc, account } = ensureContext();
       if (!tokenAddress || !bankAddress) {
@@ -337,14 +343,102 @@ function App() {
         },
       });
 
-      const { r, s, v } = signatureToVrs(signature as `0x${string}`);
+      const permitData = {
+        owner: account,
+        spender: bankAddress,
+        amount: depositAmount,
+        deadline: deadlineSec.toString(),
+        signature: signature,
+        chainId: Number(domainChainId),
+        token: tokenAddress,
+        bank: bankAddress,
+      };
+
+      setGeneratedDepositPermit(JSON.stringify(permitData, null, 2));
+      setDepositStatus('Permit signed! Share the JSON data with the executor.');
+    } catch (error) {
+      console.error(error);
+      setDepositStatus(error instanceof Error ? error.message : 'Permit signing failed.');
+    }
+  };
+
+  const handleLoadDepositPermitJson = () => {
+    try {
+      if (!permitDepositJsonInput.trim()) {
+        throw new Error('Please paste the JSON data first.');
+      }
+
+      const jsonData = JSON.parse(permitDepositJsonInput.trim());
+
+      const requiredFields = ['owner', 'amount', 'deadline', 'signature'];
+      const missingFields = requiredFields.filter(field => !jsonData[field]);
+
+      if (missingFields.length > 0) {
+        throw new Error(`JSON is missing required fields: ${missingFields.join(', ')}`);
+      }
+
+      if (!jsonData.signature.startsWith('0x') || jsonData.signature.length !== 132) {
+        throw new Error('Invalid signature format. Signature must be a hex string starting with 0x and 132 characters long.');
+      }
+
+      const amountNum = Number(jsonData.amount);
+      if (isNaN(amountNum) || amountNum <= 0) {
+        throw new Error('amount must be a valid positive number.');
+      }
+
+      setDepositAmount(jsonData.amount.toString());
+      setPermitDepositDeadline(jsonData.deadline.toString());
+      setPermitDepositSignature(jsonData.signature);
+      setPermitDepositOwner(jsonData.owner);
+
+      setDepositStatus('✅ Permit data loaded from JSON successfully! Ready to execute deposit.');
+      setPermitDepositJsonInput('');
+    } catch (error) {
+      console.error(error);
+      if (error instanceof SyntaxError) {
+        setDepositStatus('❌ Invalid JSON format. Please check your JSON syntax.');
+      } else {
+        setDepositStatus(`❌ ${error instanceof Error ? error.message : 'Failed to load JSON data.'}`);
+      }
+    }
+  };
+
+  const handleExecutePermitDeposit = async () => {
+    setDepositStatus('');
+    try {
+      const { rpc } = ensureContext();
+      if (!tokenAddress || !bankAddress) {
+        throw new Error('Contracts not configured.');
+      }
+      const amount = parseUnits(depositAmount, tokenDecimals);
+      if (amount <= 0n) {
+        throw new Error('Enter amount bigger than zero.');
+      }
+      if (!permitDepositSignature.trim()) {
+        throw new Error('Permit signature is required.');
+      }
+      if (!permitDepositOwner.trim()) {
+        throw new Error('Owner address is required. Load from JSON first.');
+      }
+      let deadlineSec: bigint;
+      if (permitDepositDeadline.trim().length > 0) {
+        const parsed = Number.parseInt(permitDepositDeadline, 10);
+        if (Number.isNaN(parsed)) {
+          throw new Error('Enter a valid permit deadline.');
+        }
+        deadlineSec = BigInt(parsed);
+      } else {
+        throw new Error('Deadline is required.');
+      }
+
+      const { r, s, v } = signatureToVrs(permitDepositSignature as `0x${string}`);
 
       setDepositStatus('Submitting deposit transaction...');
       const hash = await writeContractAsync({
         abi: bankAbi,
         address: bankAddress,
         functionName: 'permitDeposit',
-        args: [account, amount, deadlineSec, v, r, s],
+        args: [permitDepositOwner as Address, amount, deadlineSec, v, r, s],
       });
 
       setDepositStatus('Waiting for confirmation...');
@@ -353,10 +447,13 @@ function App() {
       setDepositStatus('Deposit confirmed.');
       setDepositAmount('');
       setPermitDepositDeadline('');
+      setPermitDepositSignature('');
+      setPermitDepositOwner('');
+      setPermitDepositJsonInput('');
       refreshBalances();
     } catch (error) {
       console.error(error);
-      setDepositStatus(error instanceof Error ? error.message : 'Permit deposit failed.');
+      setDepositStatus(error instanceof Error ? error.message : 'Permit deposit execution failed.');
     }
   };
 
@@ -491,12 +588,63 @@ function App() {
     }
   };
 
+  const handleLoadFromJson = () => {
+    try {
+      if (!permitBuyJsonInput.trim()) {
+        throw new Error('Please paste the JSON data first.');
+      }
+      
+      const jsonData = JSON.parse(permitBuyJsonInput.trim());
+      
+      // Validate required fields
+      const requiredFields = ['tokenId', 'price', 'signature'];
+      const missingFields = requiredFields.filter(field => !jsonData[field]);
+      
+      if (missingFields.length > 0) {
+        throw new Error(`JSON is missing required fields: ${missingFields.join(', ')}`);
+      }
+      
+      // Validate signature format
+      if (!jsonData.signature.startsWith('0x') || jsonData.signature.length !== 132) {
+        throw new Error('Invalid signature format. Signature must be a hex string starting with 0x and 132 characters long.');
+      }
+      
+      // Validate tokenId is numeric
+      const tokenIdNum = Number(jsonData.tokenId);
+      if (isNaN(tokenIdNum) || tokenIdNum < 0) {
+        throw new Error('tokenId must be a valid positive number.');
+      }
+      
+      // Validate price is numeric
+      const priceNum = Number(jsonData.price);
+      if (isNaN(priceNum) || priceNum <= 0) {
+        throw new Error('price must be a valid positive number.');
+      }
+      
+      // Populate the form fields
+      setPermitBuyTokenId(jsonData.tokenId.toString());
+      setPermitBuyPrice(jsonData.price.toString());
+      setPermitBuyDeadline(jsonData.deadline ? jsonData.deadline.toString() : '');
+      setPermitBuySignature(jsonData.signature);
+      
+      setPermitBuyStatus('✅ Data loaded from JSON successfully! All fields have been populated.');
+      setPermitBuyJsonInput(''); // Clear the JSON input after successful load
+    } catch (error) {
+      console.error(error);
+      if (error instanceof SyntaxError) {
+        setPermitBuyStatus('❌ Invalid JSON format. Please check your JSON syntax.');
+      } else {
+        setPermitBuyStatus(`❌ ${error instanceof Error ? error.message : 'Failed to load JSON data.'}`);
+      }
+    }
+  };
+
   const handlePermitBuy = async () => {
     setPermitBuyStatus('');
     try {
-      const { rpc } = ensureContext();
-      if (!marketAddress || !nftAddress) {
-        throw new Error('Marketplace not configured.');
+      const { rpc, account } = ensureContext();
+      if (!marketAddress || !nftAddress || !tokenAddress) {
+        throw new Error('Contracts not configured.');
       }
       const tokenIdNumeric = Number.parseInt(permitBuyTokenId, 10);
       if (Number.isNaN(tokenIdNumeric)) {
@@ -520,12 +668,61 @@ function App() {
         deadlineSec = BigInt(Math.floor(Date.now() / 1000) + 3600);
       }
 
+      // Generate EIP-2612 permit for token approval
+      setPermitBuyStatus('Fetching nonce for token permit...');
+      const nonce = (await rpc.readContract({
+        abi: tokenAbi,
+        address: tokenAddress,
+        functionName: 'nonces',
+        args: [account],
+      })) as bigint;
+
+      const domainChainId = activeChainId ?? configuredChainId;
+
+      setPermitBuyStatus('Signing token permit...');
+      const tokenPermitSignature = await signTypedDataAsync({
+        domain: {
+          name: tokenName,
+          version: '1',
+          chainId: Number(domainChainId),
+          verifyingContract: tokenAddress,
+        },
+        types: {
+          Permit: [
+            { name: 'owner', type: 'address' },
+            { name: 'spender', type: 'address' },
+            { name: 'value', type: 'uint256' },
+            { name: 'nonce', type: 'uint256' },
+            { name: 'deadline', type: 'uint256' },
+          ],
+        },
+        primaryType: 'Permit',
+        message: {
+          owner: account,
+          spender: marketAddress,
+          value: price,
+          nonce,
+          deadline: deadlineSec,
+        },
+      });
+
+      const { r, s, v } = signatureToVrs(tokenPermitSignature as `0x${string}`);
+
       setPermitBuyStatus('Submitting permit buy...');
       const hash = await writeContractAsync({
         abi: marketAbi,
         address: marketAddress,
         functionName: 'permitBuy',
-        args: [nftAddress, BigInt(tokenIdNumeric), price, deadlineSec, permitBuySignature as `0x${string}`],
+        args: [
+          nftAddress,
+          BigInt(tokenIdNumeric),
+          price,
+          deadlineSec,
+          permitBuySignature as `0x${string}`,
+          v,
+          r,
+          s,
+        ],
       });
       setPermitBuyStatus('Waiting for confirmation...');
       await rpc.waitForTransactionReceipt({ hash });
@@ -604,8 +801,20 @@ function App() {
         },
       });
 
-      setGeneratedSignature(signature);
-      setWhitelistStatus('Signature generated! Copy and share with the buyer.');
+      // Create a comprehensive JSON object with all necessary parameters
+      const permitData = {
+        buyer: whitelistBuyerAddress,
+        nft: nftAddress,
+        tokenId: tokenIdNumeric.toString(),
+        price: whitelistPrice,
+        deadline: deadlineSec.toString(),
+        signature: signature,
+        chainId: Number(domainChainId),
+        marketplace: marketAddress
+      };
+
+      setGeneratedSignature(JSON.stringify(permitData, null, 2));
+      setWhitelistStatus('Permit data generated! Copy and share with the buyer.');
     } catch (error) {
       console.error(error);
       setWhitelistStatus(error instanceof Error ? error.message : 'Signature generation failed.');
@@ -731,8 +940,11 @@ function App() {
       </section>
 
       <section className="card">
-        <h2>Permit deposit</h2>
-        <form className="form" onSubmit={handlePermitDeposit}>
+        <h2>Generate permit signature (Signer)</h2>
+        <p className="hint">
+          As the token holder, generate a permit signature that allows someone else to execute the deposit on your behalf.
+        </p>
+        <form className="form" onSubmit={handleGenerateDepositPermit}>
           <label className="form__row">
             <span>Amount ({tokenSymbol})</span>
             <input
@@ -752,10 +964,125 @@ function App() {
             />
           </label>
           <button className="button" type="submit">
-            Sign &amp; deposit
+            Generate permit signature
           </button>
         </form>
         {depositStatus && <p className="status">{depositStatus}</p>}
+        {generatedDepositPermit && (
+          <div>
+            <label className="form__row">
+              <span>Generated permit data (share with executor)</span>
+              <textarea
+                value={generatedDepositPermit}
+                readOnly
+                rows={10}
+                style={{ fontFamily: 'monospace', fontSize: '0.85em' }}
+                onClick={(e) => {
+                  e.currentTarget.select();
+                  navigator.clipboard.writeText(generatedDepositPermit);
+                }}
+              />
+            </label>
+            <span className="hint">Click the JSON data to copy it to clipboard. The executor needs all these parameters to complete the deposit.</span>
+          </div>
+        )}
+      </section>
+
+      <section className="card">
+        <h2>Execute permit deposit (Executor)</h2>
+        <p className="hint">
+          Anyone can execute a deposit using a valid permit signature from the token holder. The signer doesn't need to be the executor.
+        </p>
+        <div className="form">
+          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Quick Load from JSON</h3>
+            <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666' }}>
+              Paste the complete permit data JSON from the signer here:
+            </p>
+            <textarea
+              value={permitDepositJsonInput}
+              onChange={(event) => setPermitDepositJsonInput(event.target.value)}
+              placeholder='Paste JSON here, e.g.: {"owner":"0x...","spender":"0x...","amount":"10","deadline":"1234567890","signature":"0x...","chainId":1,"token":"0x...","bank":"0x..."}'
+              rows={4}
+              style={{
+                width: '100%',
+                fontFamily: 'monospace',
+                fontSize: '12px',
+                padding: '8px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                resize: 'vertical'
+              }}
+            />
+            <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+              <button
+                className="button"
+                type="button"
+                onClick={handleLoadDepositPermitJson}
+              >
+                Load from JSON
+              </button>
+              <button
+                className="button"
+                type="button"
+                onClick={() => {
+                  setDepositAmount('');
+                  setPermitDepositDeadline('');
+                  setPermitDepositSignature('');
+                  setPermitDepositOwner('');
+                  setPermitDepositJsonInput('');
+                  setDepositStatus('Fields cleared.');
+                }}
+                style={{ backgroundColor: '#6b7280' }}
+              >
+                Clear Fields
+              </button>
+            </div>
+          </div>
+          <label className="form__row">
+            <span>Owner address (from permit)</span>
+            <input
+              value={permitDepositOwner}
+              onChange={(event) => setPermitDepositOwner(event.target.value)}
+              placeholder="0x..."
+              type="text"
+            />
+          </label>
+          <label className="form__row">
+            <span>Amount ({tokenSymbol})</span>
+            <input
+              value={depositAmount}
+              onChange={(event) => setDepositAmount(event.target.value)}
+              placeholder="10"
+              type="text"
+            />
+          </label>
+          <label className="form__row">
+            <span>Permit deadline (unix seconds)</span>
+            <input
+              value={permitDepositDeadline}
+              onChange={(event) => setPermitDepositDeadline(event.target.value)}
+              placeholder="Unix timestamp"
+              type="text"
+            />
+          </label>
+          <label className="form__row">
+            <span>Permit signature (0x…)</span>
+            <input
+              value={permitDepositSignature}
+              onChange={(event) => setPermitDepositSignature(event.target.value)}
+              placeholder="0x"
+              type="text"
+            />
+          </label>
+          <button className="button" type="button" onClick={handleExecutePermitDeposit}>
+            Execute deposit
+          </button>
+          {depositStatus && <p className="status">{depositStatus}</p>}
+          <span className="hint">
+            Obtain the complete permit data JSON from the token holder. You can either paste it in the JSON box above to auto-fill all fields, or manually enter the individual parameters. The executor pays the gas but the tokens come from the signer's wallet.
+          </span>
+        </div>
       </section>
 
       <section className="card">
@@ -848,6 +1175,51 @@ function App() {
       <section className="card">
         <h2>Permit buy</h2>
         <div className="form">
+          <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Quick Load from JSON</h3>
+            <p style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666' }}>
+              Paste the complete permit data JSON from the whitelist signer here:
+            </p>
+            <textarea
+              value={permitBuyJsonInput}
+              onChange={(event) => setPermitBuyJsonInput(event.target.value)}
+              placeholder='Paste JSON here, e.g.: {"buyer":"0x...","nft":"0x...","tokenId":"1","price":"2","deadline":"1234567890","signature":"0x...","chainId":1,"marketplace":"0x..."}'
+              rows={4}
+              style={{ 
+                width: '100%', 
+                fontFamily: 'monospace', 
+                fontSize: '12px',
+                padding: '8px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                resize: 'vertical'
+              }}
+            />
+            <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+              <button 
+                className="button" 
+                type="button" 
+                onClick={handleLoadFromJson}
+              >
+                Load from JSON
+              </button>
+              <button 
+                className="button" 
+                type="button" 
+                onClick={() => {
+                  setPermitBuyTokenId('');
+                  setPermitBuyPrice('');
+                  setPermitBuyDeadline('');
+                  setPermitBuySignature('');
+                  setPermitBuyJsonInput('');
+                  setPermitBuyStatus('Fields cleared.');
+                }}
+                style={{ backgroundColor: '#6b7280' }}
+              >
+                Clear Fields
+              </button>
+            </div>
+          </div>
           <label className="form__row">
             <span>Token ID</span>
             <input
@@ -889,7 +1261,7 @@ function App() {
           </button>
           {permitBuyStatus && <p className="status">{permitBuyStatus}</p>}
           <span className="hint">
-            Obtain ALL parameters (token ID, price, deadline, signature) from the whitelist signer. All values must match exactly what was signed.
+            Obtain the complete permit data JSON from the whitelist signer. You can either paste it in the JSON box above to auto-fill all fields, or manually enter the individual parameters (tokenId, price, deadline, signature) below. All values must match exactly what was signed.
           </span>
         </div>
       </section>
@@ -901,7 +1273,7 @@ function App() {
             As the whitelist signer, you can generate signatures to authorize specific buyers to purchase NFTs.
           </p>
           <p className="hint" style={{ color: '#f59e0b', fontWeight: 'bold' }}>
-            ⚠️ Important: Share ALL parameters (buyer address, token ID, price, deadline) along with the signature. The buyer needs every detail to complete the purchase.
+            ⚠️ Important: This will generate a complete JSON object containing all necessary parameters (buyer, nft, tokenId, price, deadline, signature, chainId, marketplace). Share this entire JSON with the buyer.
           </p>
           <div className="form">
             <label className="form__row">
@@ -947,11 +1319,11 @@ function App() {
             {generatedSignature && (
               <div>
                 <label className="form__row">
-                  <span>Generated signature (share with buyer)</span>
+                  <span>Generated permit data (share with buyer)</span>
                   <textarea
                     value={generatedSignature}
                     readOnly
-                    rows={3}
+                    rows={10}
                     style={{ fontFamily: 'monospace', fontSize: '0.85em' }}
                     onClick={(e) => {
                       e.currentTarget.select();
@@ -959,7 +1331,7 @@ function App() {
                     }}
                   />
                 </label>
-                <span className="hint">Click the signature to copy it to clipboard.</span>
+                <span className="hint">Click the JSON data to copy it to clipboard. The buyer needs all these parameters to complete the purchase.</span>
               </div>
             )}
           </div>

@@ -1,3 +1,11 @@
+## Features
+
+NFT contract owner can mint NFTs:
+
+# todo add image here use mint.png
+
+NFT whitelist signer can 
+
 ## Permit Token Bank & NFT Market
 
 This workspace contains a Foundry project plus a React front end that demonstrate:
@@ -158,10 +166,15 @@ npm run build
 ```
 
 #### Front-end capabilities
-- Sign and submit ERC20 permits for `permitDeposit`.
+
+**Permit Deposit (Two-Step Flow)**
+- **Step 1 (Signer):** Generate an EIP-2612 permit signature for depositing tokens. The signer doesn't need to execute the transaction themselves—they can share the generated JSON with anyone.
+- **Step 2 (Executor):** Anyone can execute the deposit on behalf of the signer by loading the permit JSON and submitting the transaction. The executor pays the gas, but the tokens come from the signer's wallet.
+
+**Other features:**
 - Withdraw full token balance from the Bank.
 - Mint NFTs (restricted to the contract owner), approve marketplace, and list NFTs with prices in `PermitToken`.
-- Paste whitelist signatures to execute `permitBuy`.
+- **Permit Buy (Two-Step Flow):** Whitelist signer generates signatures, and any authorized buyer can execute the purchase with their own token permit.
 - Dashboard cards for wallet balance, bank vault balance, and top depositors.
 
 ---

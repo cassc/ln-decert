@@ -62,6 +62,25 @@ export const marketAbi = [
   },
   {
     type: 'function',
+    name: 'getAllListings',
+    stateMutability: 'view',
+    inputs: [
+      { type: 'address', name: 'nft' },
+    ],
+    outputs: [
+      { type: 'uint256[]', name: 'tokenIds' },
+      {
+        type: 'tuple[]',
+        name: 'listings',
+        components: [
+          { type: 'address', name: 'seller' },
+          { type: 'uint256', name: 'price' },
+        ],
+      },
+    ],
+  },
+  {
+    type: 'function',
     name: 'hashPermitBuy',
     stateMutability: 'view',
     inputs: [
@@ -82,7 +101,10 @@ export const marketAbi = [
       { type: 'uint256', name: 'tokenId' },
       { type: 'uint256', name: 'price' },
       { type: 'uint256', name: 'deadline' },
-      { type: 'bytes', name: 'signature' },
+      { type: 'bytes', name: 'whitelistSignature' },
+      { type: 'uint8', name: 'v' },
+      { type: 'bytes32', name: 'r' },
+      { type: 'bytes32', name: 's' },
     ],
     outputs: [],
   },

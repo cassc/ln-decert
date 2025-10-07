@@ -13,6 +13,7 @@ contract NFTMarketTest is Test {
 
     address internal seller;
     address internal buyer;
+    uint256 internal buyerKey;
 
     address internal whitelistSigner;
     uint256 internal whitelistKey;
@@ -25,7 +26,7 @@ contract NFTMarketTest is Test {
         market = new NFTMarket(token, whitelistSigner);
 
         seller = makeAddr("seller");
-        buyer = makeAddr("buyer");
+        (buyer, buyerKey) = makeAddrAndKey("buyer");
 
         token.transfer(seller, 20 ether);
         token.transfer(buyer, 20 ether);
@@ -42,15 +43,23 @@ contract NFTMarketTest is Test {
         vm.prank(seller);
         market.list(address(nft), tokenId, price);
 
-        bytes32 digest = market.hashPermitBuy(buyer, address(nft), tokenId, price, deadline);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(whitelistKey, digest);
-        bytes memory signature = abi.encodePacked(r, s, v);
+        // Generate whitelist signature
+        bytes32 whitelistDigest = market.hashPermitBuy(buyer, address(nft), tokenId, price, deadline);
+        (uint8 wv, bytes32 wr, bytes32 ws) = vm.sign(whitelistKey, whitelistDigest);
+        bytes memory whitelistSignature = abi.encodePacked(wr, ws, wv);
+
+        // Generate EIP-2612 token permit signature
+        uint256 nonce = token.nonces(buyer);
+        bytes32 permitTypehash =
+            keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+        bytes32 structHash = keccak256(
+            abi.encode(permitTypehash, buyer, address(market), price, nonce, deadline)
+        );
+        bytes32 permitDigest = keccak256(abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(buyerKey, permitDigest);
 
         vm.prank(buyer);
-        token.approve(address(market), price);
-
-        vm.prank(buyer);
-        market.permitBuy(address(nft), tokenId, price, deadline, signature);
+        market.permitBuy(address(nft), tokenId, price, deadline, whitelistSignature, v, r, s);
 
         assertEq(nft.ownerOf(tokenId), buyer);
         assertEq(token.balanceOf(seller), 20 ether + price);
@@ -67,14 +76,23 @@ contract NFTMarketTest is Test {
         vm.prank(seller);
         market.list(address(nft), tokenId, price);
 
-        bytes32 digest = market.hashPermitBuy(buyer, address(nft), tokenId, price, deadline);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(whitelistKey, digest);
-        bytes memory signature = abi.encodePacked(r, s, v);
+        // Generate whitelist signature
+        bytes32 whitelistDigest = market.hashPermitBuy(buyer, address(nft), tokenId, price, deadline);
+        (uint8 wv, bytes32 wr, bytes32 ws) = vm.sign(whitelistKey, whitelistDigest);
+        bytes memory whitelistSignature = abi.encodePacked(wr, ws, wv);
+
+        // Generate EIP-2612 token permit signature
+        uint256 nonce = token.nonces(buyer);
+        bytes32 permitTypehash =
+            keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+        bytes32 structHash = keccak256(
+            abi.encode(permitTypehash, buyer, address(market), price, nonce, deadline)
+        );
+        bytes32 permitDigest = keccak256(abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(buyerKey, permitDigest);
 
         vm.prank(buyer);
-        token.approve(address(market), price);
-        vm.prank(buyer);
-        market.permitBuy(address(nft), tokenId, price, deadline, signature);
+        market.permitBuy(address(nft), tokenId, price, deadline, whitelistSignature, v, r, s);
 
         // Transfer NFT back and re-list with same parameters to confirm replay protection.
         vm.prank(buyer);
@@ -82,10 +100,17 @@ contract NFTMarketTest is Test {
         vm.prank(seller);
         market.list(address(nft), tokenId, price);
 
+        // Generate new token permit signature (nonce increased after first use)
+        uint256 nonce2 = token.nonces(buyer);
+        bytes32 structHash2 = keccak256(
+            abi.encode(permitTypehash, buyer, address(market), price, nonce2, deadline)
+        );
+        bytes32 permitDigest2 = keccak256(abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash2));
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(buyerKey, permitDigest2);
+
         vm.startPrank(buyer);
-        token.approve(address(market), price);
         vm.expectRevert("NFTMarket: permit used");
-        market.permitBuy(address(nft), tokenId, price, deadline, signature);
+        market.permitBuy(address(nft), tokenId, price, deadline, whitelistSignature, v2, r2, s2);
         vm.stopPrank();
     }
 
