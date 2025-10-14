@@ -1,0 +1,22 @@
+[toolchain]
+package_manager = "npm"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+solana_token = "C42Gh6Ruv5fayWFH8SVNCFq3bKxbNQV3VH1PKactiQRv"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "npm run test"
+build = "anchor build"
+deploy = "anchor deploy"
+localnet = "anchor localnet"
