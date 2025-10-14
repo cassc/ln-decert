@@ -16,3 +16,5 @@ broadcast/
 wallet-account.json 
 5-wallet-fullstack/3-wallet-cli/viem-cli/signed.json
 5-wallet-fullstack/3-wallet-cli/viem-cli/prepared.json
+.vite/
+10-solana/4-solana-client/.anchor/program-logs/AxEx7K72AZiwkxgwxw3KkEtjAc6ezdPxcYK3zFJd3Qgu.counter_app.log
