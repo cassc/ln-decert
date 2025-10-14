@@ -14,9 +14,18 @@ cpi = ["no-entrypoint"]
 no-entrypoint = []
 no-idl = []
 no-log-ix-name = []
+custom-heap = []
+custom-panic = []
+anchor-debug = []
 idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 
 
 [dependencies]
 anchor-lang = "0.31.1"
 anchor-spl = "0.31.1"
+mpl-token-metadata = { version = "5.0.0", features = ["serde"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(target_os, values("solana"))',
+] }

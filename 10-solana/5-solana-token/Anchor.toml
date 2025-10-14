@@ -6,7 +6,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-solana_token = "C42Gh6Ruv5fayWFH8SVNCFq3bKxbNQV3VH1PKactiQRv"
+solana_token = "ErdLiDbat2pkpij1ykatMERv2hkFmv6V8RgC77jfFcCD"
+
+[test.validator]
+url = "https://api.mainnet-beta.solana.com"
+
+[[test.validator.clone]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 
 [registry]
 url = "https://api.apr.dev"
