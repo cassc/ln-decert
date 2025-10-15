@@ -1,18 +1,16 @@
 # Solana Counter App
 
+A Solana program that implements a simple counter with increment functionality, demonstrating on-chain program development with the Anchor framework.
+
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Solana CLI](https://docs.solana.com/cli/install-solana-cli-tools)
-- [Anchor Framework](https://www.anchor-lang.com/docs/installation)
+- [Anchor Framework](https://www.anchor-lang.com/docs/installation#install-anchor-cli) It's suggested to install avm and use it to manage Anchor versions.
 
 ## Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/cassc/sol-counter-app.git
-cd sol-counter-app
-
 # Install dependencies
 npm install
 ```
@@ -40,7 +38,18 @@ anchor deploy --provider.cluster devnet
 # Update the program ID in lib.rs and Anchor.toml with the deployed address
 ```
 
-## Usage Example
+## Usage
+
+Call the Solana program to increment and fetch a counter value:
+
+```bash
+anchor localnet
+anchor run call-counter
+```
+
+![Anchor Script Demo](./anchor-script.gif)
+
+### Code Example
 
 ```typescript
 // Initialize a counter
@@ -87,28 +96,3 @@ AxEx7K72AZiwkxgwxw3KkEtjAc6ezdPxcYK3zFJd3Qgu
 └── package.json                # Node dependencies
 ```
 
-## Error Handling
-
-The program includes custom error codes:
-
-- **Unauthorized**: Thrown when a non-authority tries to increment the counter
-- **NumericalOverflow**: Protection against counter overflow
-
-## Recent Updates
-
-- Fixed bumps API usage to use direct field access (`ctx.bumps.counter`) instead of deprecated `.get()` method
-- Updated for Anchor 0.31.1 compatibility
-
-## License
-
-This project is open source and available under the MIT License.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Resources
-
-- [Anchor Documentation](https://www.anchor-lang.com/)
-- [Solana Documentation](https://docs.solana.com/)
-- [Solana Cookbook](https://solanacookbook.com/)
