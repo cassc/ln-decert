@@ -5,6 +5,7 @@
     "build:program": "anchor build",
     "deploy:program": "anchor deploy",
     "initialize-mint": "ts-node --project tsconfig.json scripts/initialize-mint.ts",
+    "mint-tokens": "ts-node --project tsconfig.json scripts/mint-tokens.ts",
     "test": "ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
