@@ -1,0 +1,15 @@
+{
+  "name": "OTTER",
+  "symbol": "OTR",
+  "description": "Otter in the wild",
+  "image": "https://sapphire-efficient-penguin-931.mypinata.cloud/ipfs/bafybeidm4ixrfl24ixjojuhy3ki65v5erj32j55zof4tzsmsm56ek4xjlq",
+  "properties": {
+    "category": "image",
+    "files": [
+      {
+        "uri": "https://sapphire-efficient-penguin-931.mypinata.cloud/ipfs/bafybeidm4ixrfl24ixjojuhy3ki65v5erj32j55zof4tzsmsm56ek4xjlq",
+        "type": "image/png"
+      }
+    ]
+  }
+}
