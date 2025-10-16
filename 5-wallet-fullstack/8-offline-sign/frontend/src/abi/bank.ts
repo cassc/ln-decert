@@ -1,0 +1,108 @@
+export const bankAbi = [
+  {
+    type: 'function',
+    name: 'admin',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'address', name: '' }],
+  },
+  {
+    type: 'function',
+    name: 'balances',
+    stateMutability: 'view',
+    inputs: [{ type: 'address', name: '' }],
+    outputs: [{ type: 'uint256', name: '' }],
+  },
+  {
+    type: 'function',
+    name: 'getTopDepositors',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ type: 'address[3]', name: '' }],
+  },
+  {
+    type: 'function',
+    name: 'deposit',
+    stateMutability: 'payable',
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'depositWithPermit2',
+    stateMutability: 'nonpayable',
+    inputs: [
+      {
+        type: 'tuple',
+        name: 'permit',
+        components: [
+          {
+            type: 'tuple',
+            name: 'permitted',
+            components: [
+              { type: 'address', name: 'token' },
+              { type: 'uint256', name: 'amount' },
+            ],
+          },
+          { type: 'uint256', name: 'nonce' },
+          { type: 'uint256', name: 'deadline' },
+        ],
+      },
+      {
+        type: 'tuple',
+        name: 'transferDetails',
+        components: [
+          { type: 'address', name: 'to' },
+          { type: 'uint256', name: 'requestedAmount' },
+        ],
+      },
+      { type: 'address', name: 'owner' },
+      { type: 'bytes', name: 'signature' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'withdraw',
+    stateMutability: 'nonpayable',
+    inputs: [{ type: 'uint256', name: 'amount' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'adminWithdraw',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { type: 'address payable', name: 'to' },
+      { type: 'uint256', name: 'amount' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'event',
+    name: 'Deposit',
+    inputs: [
+      { indexed: true, internalType: 'address', name: 'account', type: 'address' },
+      { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'UserWithdraw',
+    inputs: [
+      { indexed: true, internalType: 'address', name: 'account', type: 'address' },
+      { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' },
+    ],
+    anonymous: false,
+  },
+  {
+    type: 'event',
+    name: 'AdminWithdraw',
+    inputs: [
+      { indexed: true, internalType: 'address', name: 'to', type: 'address' },
+      { indexed: false, internalType: 'uint256', name: 'amount', type: 'uint256' },
+    ],
+    anonymous: false,
+  },
+] as const;
