@@ -7,9 +7,14 @@ export const chainId = Number.isNaN(rawChainId) ? DEFAULT_CHAIN_ID : rawChainId;
 export const chainName = import.meta.env.VITE_CHAIN_NAME ?? DEFAULT_CHAIN_NAME;
 export const rpcUrl = import.meta.env.VITE_RPC_URL ?? DEFAULT_RPC_URL;
 const maybeBankAddress = import.meta.env.VITE_BANK_ADDRESS ?? '';
+const maybeWethAddress = import.meta.env.VITE_WETH_ADDRESS ?? '';
 const bankPattern = /^0x[a-fA-F0-9]{40}$/;
 export const bankAddress = bankPattern.test(maybeBankAddress)
   ? (maybeBankAddress as `0x${string}`)
   : '';
+export const wethAddress = bankPattern.test(maybeWethAddress)
+  ? (maybeWethAddress as `0x${string}`)
+  : '';
 
 export const isBankConfigured = bankAddress.length > 0;
+export const isPermitDepositConfigured = bankAddress.length > 0 && wethAddress.length > 0;

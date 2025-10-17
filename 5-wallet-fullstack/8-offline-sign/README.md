@@ -50,7 +50,7 @@ The frontend code sits in `frontend/`.
    cd frontend
    cp .env.example .env.local
    ```
-2. Fill the Bank contract address, chain id, and RPC URL in `.env.local`. The sample file points to Sepolia (chain id `11155111`, RPC `https://1rpc.io/sepolia`).
+2. Fill the Bank contract address, the wrapped ETH (WETH) token address, chain id, and RPC URL in `.env.local`. The sample file points to Sepolia (chain id `11155111`, RPC `https://1rpc.io/sepolia`).
 
 ### Install deps
 

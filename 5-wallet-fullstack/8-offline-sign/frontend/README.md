@@ -1,6 +1,6 @@
 # Token Bank Frontend
 
-This app lets you talk to the Bank smart contract. You can connect a wallet, check your saved ETH, deposit more, and (if you are the admin) withdraw.
+This app lets you talk to the Bank smart contract. You can connect a wallet, check your saved ETH, deposit more through Permit2, and withdraw.
 
 ## Setup
 
@@ -8,7 +8,7 @@ This app lets you talk to the Bank smart contract. You can connect a wallet, che
    ```bash
    cp .env.example .env.local
    ```
-   Fill in the Bank contract address, the chain id, and an RPC URL.
+   Fill in the Bank contract address, the WETH token address, the chain id, and an RPC URL.
 2. Install packages:
    ```bash
    npm install
@@ -24,8 +24,9 @@ This app lets you talk to the Bank smart contract. You can connect a wallet, che
 - Click **Connect Wallet** to link your browser wallet.
 - The **Your deposit** card shows the value stored in the Bank contract for the connected account.
 - The **Bank vault** card shows the ETH held by the Bank contract itself.
-- Use the **Deposit** form to send ETH into the Bank contract.
-- The **Withdraw** form only works for the admin wallet set on-chain. Non-admin wallets will see a warning and the call will fail on-chain.
+- Use **Approve Permit2 on WETH** once per wallet to grant Permit2 the allowance it needs.
+- Use the **Deposit** form to create a Permit2 signature and send the `depositWithPermit2` transaction. The Bank pulls your WETH, unwraps it to ETH, and credits the balance.
+- The **Withdraw** button returns your full balance as ETH.
 - Status messages appear under each form after you sign a transaction.
 
 ## Notes
@@ -33,3 +34,4 @@ This app lets you talk to the Bank smart contract. You can connect a wallet, che
 - The UI depends on `viem` and `wagmi` for wallet and contract access.
 - All addresses must be checksum style strings starting with `0x`.
 - Update the env file when you deploy the contract to a new chain.
+- Each depositor must hold WETH and, before the first deposit, approve Permit2 to spend it. The UI exposes an approval button that sends an infinite allowance; revoke it manually if you prefer smaller limits.
