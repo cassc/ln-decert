@@ -1,0 +1,46 @@
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  CANCELLED
+}
+
+type Account @entity(immutable: false) {
+  id: ID!                          # address lowercase
+  listings: [Listing!] @derivedFrom(field: "sellerAccount")
+  purchases: [Sale!]   @derivedFrom(field: "buyerAccount")
+  sales: [Sale!]       @derivedFrom(field: "sellerAccount")
+}
+
+type Listing @entity(immutable: false) {
+  id: ID!                          # `${nft}-${tokenId}`
+  nft: Bytes!
+  tokenId: BigInt!
+  seller: Bytes!
+  sellerAccount: Account!
+  price: BigInt!
+  paymentToken: Bytes!
+  status: ListingStatus!
+  createdAtBlock: BigInt!
+  createdAtTimestamp: BigInt!
+  createdTxHash: Bytes!
+  updatedAtBlock: BigInt
+  updatedAtTimestamp: BigInt
+  updatedTxHash: Bytes
+  sale: Sale @derivedFrom(field: "listing")   # one-to-one after SOLD
+}
+
+type Sale @entity(immutable: false) {
+  id: ID!                          # `${txHash}-${logIndex}`
+  listing: Listing!
+  nft: Bytes!
+  tokenId: BigInt!
+  price: BigInt!
+  paymentToken: Bytes!
+  buyer: Bytes!
+  seller: Bytes!
+  buyerAccount: Account!
+  sellerAccount: Account!
+  txHash: Bytes!
+  blockNumber: BigInt!
+  timestamp: BigInt!
+}

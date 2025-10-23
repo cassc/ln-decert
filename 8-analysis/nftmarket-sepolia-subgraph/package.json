@@ -1,0 +1,19 @@
+{
+  "name": "nftmarket-sepolia-subgraph",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy:studio": "graph deploy --studio nftmarket-sepolia",
+    "auth:studio": "graph auth --studio $GRAPH_STUDIO_DEPLOY_KEY"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-ts": "0.33.0"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "0.89.0",
+    "mustache": "^4.2.0"
+  },
+  "packageManager": "pnpm@10.18.3"
+}
