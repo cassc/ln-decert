@@ -369,63 +369,8 @@ price0CumulativeLast += uint(UQ112x112.encode(_reserve1).uqdiv(_reserve0)) * tim
 price1CumulativeLast += uint(UQ112x112.encode(_reserve0).uqdiv(_reserve1)) * timeElapsed;
 ```
 
-## ⚙️ 技术亮点
 
-1. **CREATE2 部署**：交易对地址可预测，节省 gas
-2. **定点数库 UQ112x112**：防止价格累积器溢出
-3. **EIP-2612 Permit**：支持链下签名授权，改善 UX
-4. **最小流动性锁定**：防止除零错误和价格操纵
-5. **闪电交换**：支持闪电贷功能
-6. **通缩代币支持**：特殊函数处理转账时扣费的代币
 
-## 📊 当前项目状态
-
-###  ✅ 已完成
-1. ✅ 所有合约已升级到 Solidity 0.8.20
-2. ✅ 添加详细的中文注释
-3. ✅ 项目结构完整（Core + Periphery + 测试代币）
-4. ✅ 部署脚本和测试用例已创建
-5. ✅ README 包含架构图和流程图
-
-### ⚠️ 需要修复的编译错误
-
-**状态**：合约可以编译，但有 ~15 个错误需要修复
-
-**主要问题**：
-1. Event 重复定义（接口 vs 实现）
-2. 函数冲突（多重继承）
-3. 类型转换问题（0.8.0+ 更严格）
-4. 状态可变性不匹配
-
-**详细修复步骤**：见 [UPGRADE_STATUS.md](./UPGRADE_STATUS.md)
-
-**预计修复时间**：30-60 分钟
-
-### 🔄 选项 C 升级的优缺点
-
-#### ✅ 优点
-- 统一版本，易于维护
-- 内置溢出检查，更安全
-- 现代 Solidity 语法
-- 更好的工具支持
-
-#### ⚠️ 缺点
-- 升级过程复杂（已完成 90%）
-- 需要处理兼容性问题
-- init_code_hash 会改变（需重新计算）
-
-## 🐛 已知问题
-
-1. **编译错误**（进行中）：
-   - 正在从 0.5.16/0.6.6 升级到 0.8.20
-   - 大部分工作已完成
-   - 剩余少量错误需要修复
-   - 详见 UPGRADE_STATUS.md
-
-2. **init_code_hash**：
-   - 当前代码中的 hash 可能不正确
-   - 必须在部署前更新为正确值
-   - 升级完成后需重新计算
 
 ## 📖 学习资源
 
@@ -434,18 +379,3 @@ price1CumulativeLast += uint(UQ112x112.encode(_reserve0).uqdiv(_reserve1)) * tim
 - [Uniswap V2 源码仓库](https://github.com/Uniswap/v2-core)
 - [深入理解 AMM](https://www.paradigm.xyz/2021/04/understanding-automated-market-makers-part-1-price-impact)
 
-## 📝 下一步
-
-1. ✅ 阅读并理解核心合约代码
-2. ⏳ 解决编译问题，成功部署到本地
-3. ⏳ 编写前端界面与合约交互
-4. ⏳ 撰写学习文章，分享理解
-5. ⏳ 尝试在测试网部署
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 📄 许可证
-
-本项目仅用于学习目的。Uniswap V2 原始代码遵循 GPL-3.0 许可证。
