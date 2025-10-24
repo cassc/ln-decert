@@ -4,3 +4,9 @@
 [submodule "5-wallet-fullstack/2-nft-market-backend-event/lib/openzeppelin-contracts"]
 	path = 5-wallet-fullstack/2-nft-market-backend-event/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "7-defi/vesting-foundry/lib/forge-std"]
+	path = 7-defi/vesting-foundry/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "7-defi/vesting-foundry/lib/openzeppelin-contracts"]
+	path = 7-defi/vesting-foundry/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
