@@ -1,0 +1,17 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+solc_version = "0.8.20"
+evm_version = "paris"
+
+# Optimizer settings - 匹配 Uniswap V2 原始设置
+via_ir = false
+optimizer = true
+optimizer_runs = 999999
+
+# 测试配置
+[profile.default.fuzz]
+runs = 256
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
