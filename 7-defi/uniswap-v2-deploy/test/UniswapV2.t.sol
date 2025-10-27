@@ -9,6 +9,7 @@ import "../src/test-tokens/WETH9.sol";
 import "../src/test-tokens/MockERC20.sol";
 import "../src/core/interfaces/IERC20.sol";
 import "../src/core/interfaces/IUniswapV2Callee.sol";
+import "../src/core/libraries/UQ112x112.sol";
 
 contract FlashSwapExample is IUniswapV2Callee {
     UniswapV2Factory public immutable factory;
@@ -50,6 +51,8 @@ contract FlashSwapExample is IUniswapV2Callee {
  *      - 价格计算：验证恒定乘积公式
  */
 contract UniswapV2Test is Test {
+    using UQ112x112 for uint224;
+
     WETH9 public weth;
     MockERC20 public dai;
     MockERC20 public usdc;
@@ -360,6 +363,92 @@ contract UniswapV2Test is Test {
         }
 
         assertEq(usdc.balanceOf(address(borrower)), 0, "Borrower should repay the loan");
+    }
+
+    /**
+     * @notice 测试：TWAP 随价格变化给出加权平均
+     */
+    function testTwapMatchesWeightedAverageAcrossSwap() public {
+        vm.startPrank(alice);
+
+        factory.createPair(address(dai), address(usdc));
+        dai.approve(address(router), type(uint256).max);
+        usdc.approve(address(router), type(uint256).max);
+
+        router.addLiquidity(
+            address(dai),
+            address(usdc),
+            10_000 * 10**18,
+            10_000 * 10**6,
+            0,
+            0,
+            alice,
+            block.timestamp + 300
+        );
+
+        vm.stopPrank();
+
+        address pair = factory.getPair(address(dai), address(usdc));
+        UniswapV2Pair pairContract = UniswapV2Pair(pair);
+
+        // 先让初始价格积累 30 秒
+        vm.warp(block.timestamp + 30);
+        pairContract.sync();
+
+        uint priceCumulativeStart = pairContract.price0CumulativeLast();
+
+        uint32 timestampStart;
+        uint priceStart;
+        {
+            uint112 reserve0Start;
+            uint112 reserve1Start;
+            (reserve0Start, reserve1Start, timestampStart) = pairContract.getReserves();
+            priceStart = uint(UQ112x112.encode(reserve1Start).uqdiv(reserve0Start));
+        }
+
+        // 再经过 10 秒执行一次交换，改变价格
+        vm.warp(block.timestamp + 10);
+        vm.startPrank(alice);
+        address[] memory path = new address[](2);
+        path[0] = address(dai);
+        path[1] = address(usdc);
+        router.swapExactTokensForTokens(1_000 * 10**18, 0, path, alice, block.timestamp + 300);
+        vm.stopPrank();
+
+        uint32 timestampSwap;
+        uint priceAfter;
+        {
+            uint112 reserve0AfterSwap;
+            uint112 reserve1AfterSwap;
+            (reserve0AfterSwap, reserve1AfterSwap, timestampSwap) = pairContract.getReserves();
+            priceAfter = uint(UQ112x112.encode(reserve1AfterSwap).uqdiv(reserve0AfterSwap));
+        }
+
+        // 在新的价格水平上再积累 60 秒
+        vm.warp(block.timestamp + 60);
+        pairContract.sync();
+
+        uint priceCumulativeEnd = pairContract.price0CumulativeLast();
+
+        uint32 timestampEnd;
+        (, , timestampEnd) = pairContract.getReserves();
+
+        uint32 timeElapsed = timestampEnd - timestampStart;
+        assertGt(timeElapsed, 0, "timeElapsed must be positive");
+
+        uint32 durationBefore = timestampSwap - timestampStart;
+        uint32 durationAfter = timestampEnd - timestampSwap;
+        assertGt(durationBefore, 0, "durationBefore should be positive");
+        assertGt(durationAfter, 0, "durationAfter should be positive");
+
+        uint256 totalDuration = uint256(durationBefore) + uint256(durationAfter);
+
+        // TWAP 使用 UQ112x112 定点格式（放大 2^112），后续使用时需自行缩放
+        uint priceAverage = (priceCumulativeEnd - priceCumulativeStart) / timeElapsed;
+        uint expectedPrice = (
+            priceStart * uint256(durationBefore) + priceAfter * uint256(durationAfter)
+        ) / totalDuration;
+        assertEq(priceAverage, expectedPrice, "TWAP price0 mismatch");
     }
 
     /**

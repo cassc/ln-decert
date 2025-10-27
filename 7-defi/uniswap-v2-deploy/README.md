@@ -175,6 +175,17 @@ Uniswap V2 使用恒定乘积公式：**x * y = k**
 - 使用累积价格机制实现 TWAP (Time-Weighted Average Price)
 - 防止闪电贷价格操纵
 
+#### 如何计算 TWAP 价格
+
+1. **记录起点**：在时间 `t0` 读取 `price0CumulativeLast`/`price1CumulativeLast` 与 `blockTimestampLast`。
+2. **等待时间流逝**：在未来的 `t1`（需与 `t0` 不在同一块）再次读取相同的累积值。
+3. **计算平均值**：`twap = (priceCumulative(t1) - priceCumulative(t0)) / (t1 - t0)`。
+4. **转换精度**：返回值使用 `UQ112x112` 定点格式（放大了 `2^112`），若需得到常规比例，需再除以 `2^112`。
+
+++ Notes:
+- 需要至少跨 1 秒，否则 `timeElapsed` 为 0，累计值不会增加。
+- 若在两个采样点之间发生多次交易，TWAP 会自动按各时间段权重计算平均价格。
+
 ### 5. 交易对内部换币流程
 
 1. **需求校验**：`swap()` 要求输出数量大于 0 且低于当前储备，同时 `to` 不能是任一代币合约，避免回调破坏池内余额。
@@ -417,4 +428,6 @@ price1CumulativeLast += uint(UQ112x112.encode(_reserve0).uqdiv(_reserve1)) * tim
 - [Uniswap V2 白皮书](https://uniswap.org/whitepaper.pdf)
 - [Uniswap V2 官方文档](https://docs.uniswap.org/contracts/v2/overview)
 - [Uniswap V2 源码仓库](https://github.com/Uniswap/v2-core)
+- [UniswapV2OracleLibrary.sol](https://github.com/Uniswap/v2-periphery/blob/master/contracts/libraries/UniswapV2OracleLibrary.sol)
+- [ExampleOracleSimple.sol](https://github.com/Uniswap/v2-periphery/blob/master/contracts/examples/ExampleOracleSimple.sol)
 - [深入理解 AMM](https://www.paradigm.xyz/2021/04/understanding-automated-market-makers-part-1-price-impact)
