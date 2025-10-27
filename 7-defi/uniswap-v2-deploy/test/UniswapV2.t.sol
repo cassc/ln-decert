@@ -7,6 +7,38 @@ import "../src/core/UniswapV2Pair.sol";
 import "../src/periphery/UniswapV2Router02.sol";
 import "../src/test-tokens/WETH9.sol";
 import "../src/test-tokens/MockERC20.sol";
+import "../src/core/interfaces/IERC20.sol";
+import "../src/core/interfaces/IUniswapV2Callee.sol";
+
+contract FlashSwapExample is IUniswapV2Callee {
+    UniswapV2Factory public immutable factory;
+
+    constructor(UniswapV2Factory _factory) {
+        factory = _factory;
+    }
+
+    function execute(address tokenBorrow, address tokenPay, uint amount) external {
+        address pair = factory.getPair(tokenBorrow, tokenPay);
+        require(pair != address(0), "FlashSwap: pair not found");
+
+        UniswapV2Pair pairContract = UniswapV2Pair(pair);
+        address token0 = pairContract.token0();
+        uint amount0Out = tokenBorrow == token0 ? amount : 0;
+        uint amount1Out = tokenBorrow == token0 ? 0 : amount;
+
+        pairContract.swap(amount0Out, amount1Out, address(this), abi.encode(tokenBorrow, amount, pair));
+    }
+
+    function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external override {
+        (address tokenBorrow, uint amountBorrow, address pair) = abi.decode(data, (address, uint, address));
+        require(msg.sender == pair, "FlashSwap: invalid pair");
+        require(sender == address(this), "FlashSwap: invalid sender");
+        require(amount0 == amountBorrow || amount1 == amountBorrow, "FlashSwap: amount mismatch");
+
+        uint fee = (amountBorrow * 3) / 997 + 1;
+        IERC20(tokenBorrow).transfer(pair, amountBorrow + fee);
+    }
+}
 
 /**
  * @title UniswapV2Test
@@ -283,6 +315,51 @@ contract UniswapV2Test is Test {
         assertGt(amountA, 0, "Should receive DAI back");
         assertGt(amountB, 0, "Should receive USDC back");
         assertEq(UniswapV2Pair(pair).balanceOf(alice), 0, "LP balance should be cleared");
+    }
+
+    /**
+     * @notice 测试：闪电兑换在回调内偿还本金与手续费
+     */
+    function testFlashSwapRepaysFee() public {
+        vm.startPrank(alice);
+
+        factory.createPair(address(dai), address(usdc));
+        dai.approve(address(router), type(uint256).max);
+        usdc.approve(address(router), type(uint256).max);
+
+        router.addLiquidity(
+            address(dai),
+            address(usdc),
+            10000 * 10**18,
+            10000 * 10**6,
+            0,
+            0,
+            alice,
+            block.timestamp + 300
+        );
+
+        vm.stopPrank();
+
+        address pair = factory.getPair(address(dai), address(usdc));
+        (uint112 reserve0Before, uint112 reserve1Before,) = UniswapV2Pair(pair).getReserves();
+
+        FlashSwapExample borrower = new FlashSwapExample(factory);
+        uint amountBorrow = 1000 * 10**6;
+        uint fee = (amountBorrow * 3) / 997 + 1;
+        usdc.mint(address(borrower), fee);
+
+        borrower.execute(address(usdc), address(dai), amountBorrow);
+
+        (uint112 reserve0After, uint112 reserve1After,) = UniswapV2Pair(pair).getReserves();
+        if (UniswapV2Pair(pair).token0() == address(usdc)) {
+            assertEq(uint256(reserve0After), uint256(reserve0Before) + fee, "USDC reserve should gain fee");
+            assertEq(uint256(reserve1After), uint256(reserve1Before), "DAI reserve should stay unchanged");
+        } else {
+            assertEq(uint256(reserve1After), uint256(reserve1Before) + fee, "USDC reserve should gain fee");
+            assertEq(uint256(reserve0After), uint256(reserve0Before), "DAI reserve should stay unchanged");
+        }
+
+        assertEq(usdc.balanceOf(address(borrower)), 0, "Borrower should repay the loan");
     }
 
     /**
