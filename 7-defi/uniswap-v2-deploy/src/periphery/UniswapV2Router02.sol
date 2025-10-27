@@ -199,7 +199,7 @@ contract UniswapV2Router02 is IUniswapV2Router02 {
     /**
      * @notice 使用 permit 签名移除流动性（无需提前 approve）
      */
-    function removeLiquidityWithPermit(
+    function removeLiquidityWithPermit (
         address tokenA,
         address tokenB,
         uint liquidity,

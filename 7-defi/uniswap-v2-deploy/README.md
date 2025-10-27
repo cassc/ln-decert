@@ -151,6 +151,14 @@ Uniswap V2 使用恒定乘积公式：**x * y = k**
 - 使用累积价格机制实现 TWAP (Time-Weighted Average Price)
 - 防止闪电贷价格操纵
 
+### 5. Pair Swap Flow
+
+1. **需求校验**：`swap()` 要求输出数量大于 0 且低于当前储备，同时 `to` 不能是任一代币合约，避免回调破坏池内余额。
+2. **先转后校**：先向 `to` 地址发送 `amount0Out/amount1Out`，如果 `data` 非空则触发 `uniswapV2Call`，支持闪电兑换。
+3. **计算净流入**：读取最新余额，与旧储备比较得到 `amount0In/amount1In`，若两者都为 0 直接回退。
+4. **手续费检查**：按 0.3% 手续费调整余额（乘 1000 再减去 3 倍输入），确保新的乘积不小于旧的 `reserve0 * reserve1`。
+5. **更新储备**：调用 `_update` 写回储备并触发 `Swap` 事件，记录实际的 in/out 数量供链上分析。
+
 ## ⚠️ 重要：init_code_hash 问题
 
 ### 什么是 init_code_hash？
@@ -378,4 +386,3 @@ price1CumulativeLast += uint(UQ112x112.encode(_reserve0).uqdiv(_reserve1)) * tim
 - [Uniswap V2 官方文档](https://docs.uniswap.org/contracts/v2/overview)
 - [Uniswap V2 源码仓库](https://github.com/Uniswap/v2-core)
 - [深入理解 AMM](https://www.paradigm.xyz/2021/04/understanding-automated-market-makers-part-1-price-impact)
-

@@ -24,10 +24,15 @@ contract UniswapV2Test is Test {
     UniswapV2Factory public factory;
     UniswapV2Router02 public router;
 
-    address public alice = address(0x1);
+    uint256 internal alicePrivateKey;
+    address public alice;
     address public bob = address(0x2);
 
     function setUp() public {
+        // 初始化测试账户
+        alicePrivateKey = 0xA11CE;
+        alice = vm.addr(alicePrivateKey);
+
         // 部署代币
         weth = new WETH9();
         dai = new MockERC20("Dai Stablecoin", "DAI");
@@ -102,6 +107,47 @@ contract UniswapV2Test is Test {
     }
 
     /**
+     * @notice 测试：在已有储备下添加流动性时使用最优数额
+     */
+    function testAddLiquidityOptimalRebalancesAmounts() public {
+        vm.startPrank(alice);
+
+        // 创建交易对并添加初始流动性（1:1 比例）
+        factory.createPair(address(dai), address(usdc));
+        dai.approve(address(router), type(uint256).max);
+        usdc.approve(address(router), type(uint256).max);
+
+        router.addLiquidity(
+            address(dai),
+            address(usdc),
+            1000 * 10**18,
+            1000 * 10**6,
+            0,
+            0,
+            alice,
+            block.timestamp + 300
+        );
+
+        // 再次添加流动性，但期望数量与池中比例不匹配
+        (uint amountA, uint amountB, uint liquidity) = router.addLiquidity(
+            address(dai),
+            address(usdc),
+            2000 * 10**18,  // 期望投入更多的 DAI
+            5000 * 10**6,   // 期望投入更多的 USDC
+            1900 * 10**18,
+            1900 * 10**6,
+            alice,
+            block.timestamp + 300
+        );
+
+        vm.stopPrank();
+
+        assertTrue(liquidity > 0, "Should mint LP tokens");
+        assertEq(amountA, 2000 * 10**18, "Router should consume full DAI amount");
+        assertEq(amountB, 2000 * 10**6, "Router should scale USDC down to match pool ratio");
+    }
+
+    /**
      * @notice 测试：添加 ETH 流动性
      */
     function testAddLiquidityETH() public {
@@ -170,6 +216,73 @@ contract UniswapV2Test is Test {
 
         assertTrue(amountA > 0, "Should receive DAI back");
         assertTrue(amountB > 0, "Should receive USDC back");
+    }
+
+    /**
+     * @notice 测试：使用 permit 移除流动性
+     */
+    function testRemoveLiquidityWithPermit() public {
+        vm.startPrank(alice);
+
+        // 创建交易对并添加流动性
+        factory.createPair(address(dai), address(usdc));
+        dai.approve(address(router), type(uint256).max);
+        usdc.approve(address(router), type(uint256).max);
+
+        (, , uint liquidity) = router.addLiquidity(
+            address(dai),
+            address(usdc),
+            5000 * 10**18,
+            5000 * 10**6,
+            0,
+            0,
+            alice,
+            block.timestamp + 300
+        );
+
+        vm.stopPrank();
+
+        address pair = factory.getPair(address(dai), address(usdc));
+        uint deadline = block.timestamp + 300;
+        uint nonce = UniswapV2Pair(pair).nonces(alice);
+
+        bytes32 digest = keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                UniswapV2Pair(pair).DOMAIN_SEPARATOR(),
+                keccak256(
+                    abi.encode(
+                        UniswapV2Pair(pair).PERMIT_TYPEHASH(),
+                        alice,
+                        address(router),
+                        liquidity,
+                        nonce,
+                        deadline
+                    )
+                )
+            )
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePrivateKey, digest);
+
+        vm.prank(alice);
+        (uint amountA, uint amountB) = router.removeLiquidityWithPermit(
+            address(dai),
+            address(usdc),
+            liquidity,
+            0,
+            0,
+            alice,
+            deadline,
+            false,
+            v,
+            r,
+            s
+        );
+
+        assertGt(amountA, 0, "Should receive DAI back");
+        assertGt(amountB, 0, "Should receive USDC back");
+        assertEq(UniswapV2Pair(pair).balanceOf(alice), 0, "LP balance should be cleared");
     }
 
     /**
