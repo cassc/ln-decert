@@ -80,6 +80,30 @@ sequenceDiagram
     Pair-->>User: 返回代币
 ```
 
+### 交易对内部换币流程
+
+```mermaid
+sequenceDiagram
+    participant Trader as Trader
+    participant Pair as UniswapV2Pair
+    participant Token0 as Token0
+    participant Token1 as Token1
+    participant Callee as FlashCallback
+
+    Trader->>Pair: swap(amount0Out, amount1Out, to, data)
+    Pair->>Trader: require(to ≠ Token0/Token1)
+    Pair->>Token0: transfer(amount0Out)
+    Pair->>Token1: transfer(amount1Out)
+    alt data.length > 0
+        Pair->>Callee: uniswapV2Call(msg.sender, amount0Out, amount1Out, data)
+    end
+    Token0->>Pair: transfer(amount0In)
+    Token1->>Pair: transfer(amount1In)
+    Pair->>Pair: verify fee-adjusted K invariant
+    Pair->>Pair: _update(balance0, balance1)
+    Pair->>Trader: emit Swap
+```
+
 ### 恒定乘积公式 (x * y = k)
 
 ```mermaid
@@ -151,7 +175,7 @@ Uniswap V2 使用恒定乘积公式：**x * y = k**
 - 使用累积价格机制实现 TWAP (Time-Weighted Average Price)
 - 防止闪电贷价格操纵
 
-### 5. Pair Swap Flow
+### 5. 交易对内部换币流程
 
 1. **需求校验**：`swap()` 要求输出数量大于 0 且低于当前储备，同时 `to` 不能是任一代币合约，避免回调破坏池内余额。
 2. **先转后校**：先向 `to` 地址发送 `amount0Out/amount1Out`，如果 `data` 非空则触发 `uniswapV2Call`，支持闪电兑换。
