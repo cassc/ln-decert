@@ -6,14 +6,14 @@
 
 ### 与 V2 的主要区别
 
-| 特性 | Uniswap V2 | Uniswap V3 |
-|------|------------|------------|
-| 流动性分布 | 均匀分布在 (0, ∞) | 集中流动性，LP 可选择价格区间 |
-| 手续费等级 | 固定 0.3% | 0.05%, 0.30%, 1.00% 三档可选 |
-| 资本效率 | 较低 | 可提升 4000 倍以上 |
-| LP 代币 | ERC20（可替代） | ERC721 NFT（不可替代） |
-| 价格预言机 | TWAP | 改进的几何 TWAP，gas 优化 |
-| Range Orders | 不支持 | 支持（限价单功能） |
+| 特性         | Uniswap V2        | Uniswap V3                    |
+|--------------|-------------------|-------------------------------|
+| 流动性分布   | 均匀分布在 (0, ∞) | 集中流动性，LP 可选择价格区间 |
+| 手续费等级   | 固定 0.3%         | 0.05%, 0.30%, 1.00% 三档可选  |
+| 资本效率     | 较低              | 可提升 4000 倍以上            |
+| LP 代币      | ERC20（可替代）   | ERC721 NFT（不可替代）        |
+| 价格预言机   | TWAP              | 改进的几何 TWAP，gas 优化     |
+| Range Orders | 不支持            | 支持（限价单功能）            |
 
 ### 集中流动性（Concentrated Liquidity）
 
@@ -555,11 +555,3 @@ V3 的 gas 成本比 V2 高，特别是：
 - [Uniswap V3 源码仓库 - Periphery](https://github.com/Uniswap/v3-periphery)
 - [Uniswap V3 开发书](https://uniswapv3book.com/)
 - [Paradigm: Understanding Uniswap V3](https://www.paradigm.xyz/2021/06/uniswap-v3-the-universal-amm)
-
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 📄 许可证
-
-MIT License
