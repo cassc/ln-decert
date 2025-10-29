@@ -10,3 +10,9 @@
 [submodule "7-defi/vesting-foundry/lib/openzeppelin-contracts"]
 	path = 7-defi/vesting-foundry/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "7-defi/0-eip-1167-mem/lib/forge-std"]
+	path = 7-defi/0-eip-1167-mem/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "7-defi/0-eip-1167-mem/lib/openzeppelin-contracts"]
+	path = 7-defi/0-eip-1167-mem/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
