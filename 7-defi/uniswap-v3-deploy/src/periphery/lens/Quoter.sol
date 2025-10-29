@@ -13,15 +13,15 @@ import '../libraries/Path.sol';
 import '../libraries/PoolAddress.sol';
 import '../libraries/CallbackValidation.sol';
 
-/// @title Provides quotes for swaps
-/// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
-/// @dev These functions are not gas efficient and should _not_ be called on chain. Instead, optimistically execute
-/// the swap and check the amounts in the callback.
+/// @title 提供掉期报价
+/// @notice 允许在不执行交换的情况下获取给定交换的预期金额或输入金额
+/// @dev 这些函数的gas效率不高，不应该在链上调用。相反，乐观地执行
+/// 交换并检查回调中的金额。
 contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
     using Path for bytes;
     using SafeCast for uint256;
 
-    /// @dev Transient storage variable used to check a safety condition in exact output swaps.
+    /// @dev 瞬态存储变量用于检查精确输出交换中的安全条件。
     uint256 private amountOutCached;
 
     constructor(address _factory, address _WETH9) PeripheryImmutableState(_factory, _WETH9) {}
@@ -55,7 +55,7 @@ contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
                 revert(ptr, 32)
             }
         } else {
-            // if the cache has been populated, ensure that the full output amount has been received
+            // 如果缓存已填充，请确保已收到完整的输出量
             if (amountOutCached != 0) require(amountReceived == amountOutCached);
             assembly {
                 let ptr := mload(0x40)
@@ -65,7 +65,7 @@ contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
         }
     }
 
-    /// @dev Parses a revert reason that should contain the numeric quote
+    /// @dev 解析应包含数字引号的恢复原因
     function parseRevertReason(bytes memory reason) private pure returns (uint256) {
         if (reason.length != 32) {
             if (reason.length < 68) revert('Unexpected error');
@@ -109,10 +109,10 @@ contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
 
             (address tokenIn, address tokenOut, uint24 fee) = path.decodeFirstPool();
 
-            // the outputs of prior swaps become the inputs to subsequent ones
+            // 先前交换的输出成为后续交换的输入
             amountIn = quoteExactInputSingle(tokenIn, tokenOut, fee, amountIn, 0);
 
-            // decide whether to continue or terminate
+            // 决定是否继续或终止
             if (hasMultiplePools) {
                 path = path.skipToken();
             } else {
@@ -131,7 +131,7 @@ contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
     ) public override returns (uint256 amountIn) {
         bool zeroForOne = tokenIn < tokenOut;
 
-        // if no price limit has been specified, cache the output amount for comparison in the swap callback
+        // 如果没有指定价格限制，则缓存输出金额以在交换回调中进行比较
         if (sqrtPriceLimitX96 == 0) amountOutCached = amountOut;
         try
             getPool(tokenIn, tokenOut, fee).swap(
@@ -156,10 +156,10 @@ contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
 
             (address tokenOut, address tokenIn, uint24 fee) = path.decodeFirstPool();
 
-            // the inputs of prior swaps become the outputs of subsequent ones
+            // 先前互换的输入成为后续互换的输出
             amountOut = quoteExactOutputSingle(tokenIn, tokenOut, fee, amountOut, 0);
 
-            // decide whether to continue or terminate
+            // 决定是否继续或终止
             if (hasMultiplePools) {
                 path = path.skipToken();
             } else {

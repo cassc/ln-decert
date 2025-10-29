@@ -32,7 +32,7 @@ contract TickBitmapTest {
         return gasBefore - gasleft();
     }
 
-    // returns whether the given tick is initialized
+    // 返回给定的刻度是否已初始化
     function isInitialized(int24 tick) external view returns (bool) {
         (int24 next, bool initialized) = bitmap.nextInitializedTickWithinOneWord(tick, 1, true);
         return next == tick ? initialized : false;

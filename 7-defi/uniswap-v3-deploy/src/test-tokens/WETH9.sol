@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0
 // Copyright (C) 2015, 2016, 2017 Dapphub
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// 该程序是免费软件：您可以重新分发它和/或修改
+// 它遵循 GNU 通用公共许可证的条款，由
+// 自由软件基金会，许可证的版本 3，或
+// （由您选择）任何更高版本。
 
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// 分发此程序是希望它有用，
+// 但不提供任何保证；甚至没有默示保证
+// 适销性或特定用途的适用性。  请参阅
+// GNU 通用公共许可证了解更多详细信息。
 
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// 您应该已收到 GNU 通用公共许可证的副本
+// 与这个程序一起。  如果没有，请参阅 <http://www.gnu.org/licenses/>。
 
 pragma solidity =0.7.6;
 
 /**
- * @title WETH9
+ * @标题WETH9
  * @notice Wrapped Ether - 将 ETH 包装为 ERC20 代币
  * @dev 1 WETH = 1 ETH，可以双向转换
  *

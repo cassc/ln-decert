@@ -13,8 +13,8 @@ import './libraries/PoolAddress.sol';
 import './libraries/NFTDescriptor.sol';
 import './libraries/TokenRatioSortOrder.sol';
 
-/// @title Describes NFT token positions
-/// @notice Produces a string containing the data URI for a JSON metadata string
+/// @title 描述 NFT 代币头寸
+/// @notice 生成一个包含 JSON 元数据字符串的数据 URI 的字符串
 contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescriptor {
     address private constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
@@ -23,7 +23,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
     address private constant WBTC = 0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599;
 
     address public immutable WETH9;
-    /// @dev A null-terminated string
+    /// @dev 以 null 结尾的字符串
     bytes32 public immutable nativeCurrencyLabelBytes;
 
     constructor(address _WETH9, bytes32 _nativeCurrencyLabelBytes) {
@@ -31,7 +31,7 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         nativeCurrencyLabelBytes = _nativeCurrencyLabelBytes;
     }
 
-    /// @notice Returns the native currency label as a string
+    /// @notice 以字符串形式返回本机货币标签
     function nativeCurrencyLabel() public view returns (string memory) {
         uint256 len = 0;
         while (len < 32 && nativeCurrencyLabelBytes[len] != 0) {

@@ -2,7 +2,7 @@
 pragma solidity =0.7.6;
 
 /**
- * @title MockERC20
+ * @title 模拟 ERC20
  * @notice 用于测试的简单 ERC20 代币
  * @dev 任何人都可以铸造代币（仅用于测试！）
  */

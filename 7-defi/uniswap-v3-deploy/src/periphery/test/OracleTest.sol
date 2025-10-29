@@ -22,7 +22,7 @@ contract OracleTest {
         quoteAmount = OracleLibrary.getQuoteAtTick(tick, baseAmount, baseToken, quoteToken);
     }
 
-    // For gas snapshot test
+    // 用于气体快照测试
     function getGasCostOfConsult(address pool, uint32 period) public view returns (uint256) {
         uint256 gasBefore = gasleft();
         OracleLibrary.consult(pool, period);

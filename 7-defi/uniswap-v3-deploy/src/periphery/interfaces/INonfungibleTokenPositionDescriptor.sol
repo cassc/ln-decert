@@ -3,13 +3,13 @@ pragma solidity >=0.5.0;
 
 import './INonfungiblePositionManager.sol';
 
-/// @title Describes position NFT tokens via URI
+/// @title 通过 URI 描述位置 NFT 代币
 interface INonfungibleTokenPositionDescriptor {
-    /// @notice Produces the URI describing a particular token ID for a position manager
-    /// @dev Note this URI may be a data: URI with the JSON contents directly inlined
-    /// @param positionManager The position manager for which to describe the token
-    /// @param tokenId The ID of the token for which to produce a description, which may not be valid
-    /// @return The URI of the ERC721-compliant metadata
+    /// @notice 生成描述职位管理器特定令牌 ID 的 URI
+    /// @dev 请注意，此 URI 可能是直接内联 JSON 内容的 data: URI
+    /// @param positionManager 描述令牌的仓位管理器
+    /// @param tokenId 要为其生成描述的令牌的 ID，该 ID 可能无效
+    /// @return 符合 ERC721 的元数据的 URI
     function tokenURI(INonfungiblePositionManager positionManager, uint256 tokenId)
         external
         view

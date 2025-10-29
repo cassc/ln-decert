@@ -4,7 +4,7 @@ pragma solidity =0.7.6;
 import './TestERC20.sol';
 import '../interfaces/external/IERC20PermitAllowed.sol';
 
-// has a fake permit that just uses the other signature type for type(uint256).max
+// 有一个假许可证，仅使用 type(uint256).max 的其他签名类型
 contract TestERC20PermitAllowed is TestERC20, IERC20PermitAllowed {
     constructor(uint256 amountToMint) TestERC20(amountToMint) {}
 

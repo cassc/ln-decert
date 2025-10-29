@@ -12,8 +12,8 @@ import '../libraries/CallbackValidation.sol';
 import '../libraries/TransferHelper.sol';
 import '../interfaces/ISwapRouter.sol';
 
-/// @title Flash contract implementation
-/// @notice An example contract using the Uniswap V3 flash function
+/// @title Flash合约实施
+/// @notice 使用 Uniswap V3 flash 功能的示例合约
 contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
     using LowGasSafeMath for uint256;
     using LowGasSafeMath for int256;
@@ -28,7 +28,7 @@ contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
         swapRouter = _swapRouter;
     }
 
-    // fee2 and fee3 are the two other fees associated with the two other pools of token0 and token1
+    // Fee2 和 Fee3 是与另外两个池 token0 和 token1 相关的另外两项费用
     struct FlashCallbackData {
         uint256 amount0;
         uint256 amount1;
@@ -38,11 +38,11 @@ contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
         uint24 poolFee3;
     }
 
-    /// @param fee0 The fee from calling flash for token0
-    /// @param fee1 The fee from calling flash for token1
-    /// @param data The data needed in the callback passed as FlashCallbackData from `initFlash`
-    /// @notice implements the callback called from flash
-    /// @dev fails if the flash is not profitable, meaning the amountOut from the flash is less than the amount borrowed
+    /// @param Fee0 调用flash获取token0的费用
+    /// @param Fee1 调用flash获取token1的费用
+    /// @param data 回调中所需的数据作为 FlashCallbackData 从 `initFlash` 传递
+    /// @notice 实现从 flash 调用的回调
+    /// @dev 如果闪存无法盈利，则失败，这意味着闪存中的 amountOut 小于借入的金额
     function uniswapV3FlashCallback(
         uint256 fee0,
         uint256 fee1,
@@ -54,12 +54,12 @@ contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
         address token0 = decoded.poolKey.token0;
         address token1 = decoded.poolKey.token1;
 
-        // profitability parameters - we must receive at least the required payment from the arbitrage swaps
-        // exactInputSingle will fail if this amount not met
+        // 盈利能力参数 - 我们必须至少从套利互换中收到所需的付款
+        // 如果未达到此金额，exactInputSingle 将失败
         uint256 amount0Min = LowGasSafeMath.add(decoded.amount0, fee0);
         uint256 amount1Min = LowGasSafeMath.add(decoded.amount1, fee1);
 
-        // call exactInputSingle for swapping token1 for token0 in pool with fee2
+        // 调用exactInputSingle将池中的token1交换为token0，费用为2
         TransferHelper.safeApprove(token1, address(swapRouter), decoded.amount1);
         uint256 amountOut0 =
             swapRouter.exactInputSingle(
@@ -75,7 +75,7 @@ contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
                 })
             );
 
-        // call exactInputSingle for swapping token0 for token 1 in pool with fee3
+        // 调用exactInputSingle将池中的token0交换为费用3的token 1
         TransferHelper.safeApprove(token0, address(swapRouter), decoded.amount0);
         uint256 amountOut1 =
             swapRouter.exactInputSingle(
@@ -91,11 +91,11 @@ contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
                 })
             );
 
-        // pay the required amounts back to the pair
+        // 向两人支付所需金额
         if (amount0Min > 0) pay(token0, address(this), msg.sender, amount0Min);
         if (amount1Min > 0) pay(token1, address(this), msg.sender, amount1Min);
 
-        // if profitable pay profits to payer
+        // 如果有利可图，则向付款人支付利润
         if (amountOut0 > amount0Min) {
             uint256 profit0 = amountOut0 - amount0Min;
             pay(token0, address(this), decoded.payer, profit0);
@@ -106,9 +106,9 @@ contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
         }
     }
 
-    //fee1 is the fee of the pool from the initial borrow
-    //fee2 is the fee of the first pool to arb from
-    //fee3 is the fee of the second pool to arb from
+    // Fee1 是初始借入池的费用
+    // Fee2 是第一个套利池的费用
+    // Fee3 是第二个套利池的费用
     struct FlashParams {
         address token0;
         address token1;
@@ -119,17 +119,17 @@ contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
         uint24 fee3;
     }
 
-    /// @param params The parameters necessary for flash and the callback, passed in as FlashParams
-    /// @notice Calls the pools flash function with data needed in `uniswapV3FlashCallback`
+    /// @param params flash 和回调所需的参数，以 FlashParams 形式传入
+    /// @notice 使用“uniswapV3FlashCallback”中所需的数据调用池闪存函数
     function initFlash(FlashParams memory params) external {
         PoolAddress.PoolKey memory poolKey =
             PoolAddress.PoolKey({token0: params.token0, token1: params.token1, fee: params.fee1});
         IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, poolKey));
-        // recipient of borrowed amounts
-        // amount of token0 requested to borrow
-        // amount of token1 requested to borrow
-        // need amount 0 and amount1 in callback to pay back pool
-        // recipient of flash should be THIS contract
+        // 借款金额的接收者
+        // 请求借用的token0数量
+        // 请求借用的 token1 数量
+        // 需要回调中的 amount 0 和 amount1 来还款池
+        // Flash 的接收者应该是此合同
         pool.flash(
             address(this),
             params.amount0,

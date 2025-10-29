@@ -3,23 +3,23 @@ pragma solidity >=0.5.0;
 
 import './BitMath.sol';
 
-/// @title Packed tick initialized state library
-/// @notice Stores a packed mapping of tick index to its initialized state
-/// @dev The mapping uses int16 for keys since ticks are represented as int24 and there are 256 (2^8) values per word.
+/// @title 打包蜱初始化状态库
+/// @notice 将刻度索引的打包映射存储到其初始化状态
+/// @dev 该映射使用 int16 作为键，因为刻度表示为 int24 并且每个单词有 256 (2^8) 个值。
 library TickBitmap {
-    /// @notice Computes the position in the mapping where the initialized bit for a tick lives
-    /// @param tick The tick for which to compute the position
-    /// @return wordPos The key in the mapping containing the word in which the bit is stored
-    /// @return bitPos The bit position in the word where the flag is stored
+    /// @notice 计算映射中刻度的初始化位所在的位置
+    /// @param 刻度 计算位置的刻度
+    /// @return wordPos 映射中包含存储位的字的键
+    /// @return bitPos 存储标志的字中的位位置
     function position(int24 tick) private pure returns (int16 wordPos, uint8 bitPos) {
         wordPos = int16(tick >> 8);
         bitPos = uint8(tick % 256);
     }
 
-    /// @notice Flips the initialized state for a given tick from false to true, or vice versa
-    /// @param self The mapping in which to flip the tick
-    /// @param tick The tick to flip
-    /// @param tickSpacing The spacing between usable ticks
+    /// @notice 将给定刻度的初始化状态从 false 翻转为 true，反之亦然
+    /// @param self 翻转刻度的映射
+    /// @param 勾选 要翻转的勾选
+    /// @param tickSpacing 可用刻度之间的间距
     function flipTick(
         mapping(int16 => uint256) storage self,
         int24 tick,
@@ -31,14 +31,14 @@ library TickBitmap {
         self[wordPos] ^= mask;
     }
 
-    /// @notice Returns the next initialized tick contained in the same word (or adjacent word) as the tick that is either
-    /// to the left (less than or equal to) or right (greater than) of the given tick
-    /// @param self The mapping in which to compute the next initialized tick
-    /// @param tick The starting tick
-    /// @param tickSpacing The spacing between usable ticks
-    /// @param lte Whether to search for the next initialized tick to the left (less than or equal to the starting tick)
-    /// @return next The next initialized or uninitialized tick up to 256 ticks away from the current tick
-    /// @return initialized Whether the next tick is initialized, as the function only searches within up to 256 ticks
+    /// @notice 返回与以下任一刻度相同的单词（或相邻单词）中包含的下一个初始化刻度
+    /// 给定刻度的左侧（小于或等于）或右侧（大于）
+    /// @param self 用于计算下一个初始化刻度的映射
+    /// @param 刻度线 起始刻度线
+    /// @param tickSpacing 可用刻度之间的间距
+    /// @param lte 是否搜索左侧下一个初始化的刻度（小于或等于起始刻度）
+    /// @return next 距当前刻度最多 256 个刻度的下一个已初始化或未初始化刻度
+    /// @return 是否初始化下一个刻度，因为该函数仅在最多 256 个刻度内搜索
     function nextInitializedTickWithinOneWord(
         mapping(int16 => uint256) storage self,
         int24 tick,
@@ -50,26 +50,26 @@ library TickBitmap {
 
         if (lte) {
             (int16 wordPos, uint8 bitPos) = position(compressed);
-            // all the 1s at or to the right of the current bitPos
+            // 当前 bitPos 右侧或右侧的所有 1
             uint256 mask = (1 << bitPos) - 1 + (1 << bitPos);
             uint256 masked = self[wordPos] & mask;
 
-            // if there are no initialized ticks to the right of or at the current tick, return rightmost in the word
+            // 如果当前刻度的右侧或当前刻度处没有初始化刻度，则返回单词中最右边的刻度
             initialized = masked != 0;
-            // overflow/underflow is possible, but prevented externally by limiting both tickSpacing and tick
+            // 上溢/下溢是可能的，但可以通过限制tickSpacing和tick从外部防止
             next = initialized
                 ? (compressed - int24(bitPos - BitMath.mostSignificantBit(masked))) * tickSpacing
                 : (compressed - int24(bitPos)) * tickSpacing;
         } else {
-            // start from the word of the next tick, since the current tick state doesn't matter
+            // 从下一个刻度的单词开始，因为当前刻度状态并不重要
             (int16 wordPos, uint8 bitPos) = position(compressed + 1);
-            // all the 1s at or to the left of the bitPos
+            // bitPos 左边或左边的所有 1
             uint256 mask = ~((1 << bitPos) - 1);
             uint256 masked = self[wordPos] & mask;
 
-            // if there are no initialized ticks to the left of the current tick, return leftmost in the word
+            // 如果当前刻度左侧没有初始化刻度，则返回单词中最左边的刻度
             initialized = masked != 0;
-            // overflow/underflow is possible, but prevented externally by limiting both tickSpacing and tick
+            // 上溢/下溢是可能的，但可以通过限制tickSpacing和tick从外部防止
             next = initialized
                 ? (compressed + 1 + int24(BitMath.leastSignificantBit(masked) - bitPos)) * tickSpacing
                 : (compressed + 1 + int24(type(uint8).max - bitPos)) * tickSpacing;

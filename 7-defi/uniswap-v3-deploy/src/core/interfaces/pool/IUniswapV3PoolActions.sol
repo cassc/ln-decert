@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-/// @title Permissionless pool actions
-/// @notice Contains pool methods that can be called by anyone
+/// @title 无需许可的池操作
+/// @notice 包含任何人都可以调用的池方法
 interface IUniswapV3PoolActions {
-    /// @notice Sets the initial price for the pool
-    /// @dev Price is represented as a sqrt(amountToken1/amountToken0) Q64.96 value
-    /// @param sqrtPriceX96 the initial sqrt price of the pool as a Q64.96
+    /// @notice 设置池的初始价格
+    /// @dev 价格表示为 sqrt(amountToken1/amountToken0) Q64.96 值
+    /// @param sqrtPriceX96 池的初始 sqrt 价格为 Q64.96
     function initialize(uint160 sqrtPriceX96) external;
 
-    /// @notice Adds liquidity for the given recipient/tickLower/tickUpper position
-    /// @dev The caller of this method receives a callback in the form of IUniswapV3MintCallback#uniswapV3MintCallback
-    /// in which they must pay any token0 or token1 owed for the liquidity. The amount of token0/token1 due depends
-    /// on tickLower, tickUpper, the amount of liquidity, and the current price.
-    /// @param recipient The address for which the liquidity will be created
-    /// @param tickLower The lower tick of the position in which to add liquidity
-    /// @param tickUpper The upper tick of the position in which to add liquidity
-    /// @param amount The amount of liquidity to mint
-    /// @param data Any data that should be passed through to the callback
-    /// @return amount0 The amount of token0 that was paid to mint the given amount of liquidity. Matches the value in the callback
-    /// @return amount1 The amount of token1 that was paid to mint the given amount of liquidity. Matches the value in the callback
+    /// @notice 为给定的接收者/tickLower/tickUpper 头寸增加流动性
+    /// @dev 该方法的调用者收到 IUniswapV3MintCallback#uniswapV3MintCallback 形式的回调
+    /// 他们必须支付流动性所欠的任何 token0 或 token1。 token0/token1 到期金额取决于
+    /// ontickLower、tickUpper、流动性数量和当前价格。
+    /// @param 接收者 将为其创建流动性的地址
+    /// @param tickLower 添加流动性的头寸的下限价位
+    /// @param tickUpper 添加流动性的头寸的上限
+    /// @param amount 铸造的流动性数量
+    /// @param data 应传递给回调的任何数据
+    /// @return amount0 为铸造给定量的流动性而支付的 token0 的数量。匹配回调中的值
+    /// @return amount1 为铸造给定量的流动性而支付的 token1 的数量。匹配回调中的值
     function mint(
         address recipient,
         int24 tickLower,
@@ -28,18 +28,18 @@ interface IUniswapV3PoolActions {
         bytes calldata data
     ) external returns (uint256 amount0, uint256 amount1);
 
-    /// @notice Collects tokens owed to a position
-    /// @dev Does not recompute fees earned, which must be done either via mint or burn of any amount of liquidity.
-    /// Collect must be called by the position owner. To withdraw only token0 or only token1, amount0Requested or
-    /// amount1Requested may be set to zero. To withdraw all tokens owed, caller may pass any value greater than the
-    /// actual tokens owed, e.g. type(uint128).max. Tokens owed may be from accumulated swap fees or burned liquidity.
-    /// @param recipient The address which should receive the fees collected
-    /// @param tickLower The lower tick of the position for which to collect fees
-    /// @param tickUpper The upper tick of the position for which to collect fees
-    /// @param amount0Requested How much token0 should be withdrawn from the fees owed
-    /// @param amount1Requested How much token1 should be withdrawn from the fees owed
-    /// @return amount0 The amount of fees collected in token0
-    /// @return amount1 The amount of fees collected in token1
+    /// @notice 收集某个仓位所欠的代币
+    /// @dev 不重新计算赚取的费用，这必须通过铸造或燃烧任何数量的流动性来完成。
+    /// Collect 必须由仓位所有者调用。仅提取 token0 或仅 token1、请求的 amount0 或
+    /// amount1Requested 可以设置为零。要撤回所欠的所有代币，调用者可以传递任何大于
+    /// 实际欠下的代币，例如类型(uint128).max。所欠代币可能来自累积的掉期费用或消耗的流动性。
+    /// @param 接收者 应接收所收取费用的地址
+    /// @param tickLower 收取费用的仓位下限价位
+    /// @param tickUpper 收费仓位的上限
+    /// @param amount0Requested 应从所欠费用中提取多少 token0
+    /// @param amount1Requested 应从所欠费用中提取多少 token1
+    /// @return amount0 以 token0 收取的费用金额
+    /// @return amount1 以 token1 收取的费用金额
     function collect(
         address recipient,
         int24 tickLower,
@@ -48,30 +48,30 @@ interface IUniswapV3PoolActions {
         uint128 amount1Requested
     ) external returns (uint128 amount0, uint128 amount1);
 
-    /// @notice Burn liquidity from the sender and account tokens owed for the liquidity to the position
-    /// @dev Can be used to trigger a recalculation of fees owed to a position by calling with an amount of 0
-    /// @dev Fees must be collected separately via a call to #collect
-    /// @param tickLower The lower tick of the position for which to burn liquidity
-    /// @param tickUpper The upper tick of the position for which to burn liquidity
-    /// @param amount How much liquidity to burn
-    /// @return amount0 The amount of token0 sent to the recipient
-    /// @return amount1 The amount of token1 sent to the recipient
+    /// @notice 销毁发送者的流动性和该头寸所欠流动性的账户代币
+    /// @dev 可用于通过调用金额为 0 来触发重新计算仓位所欠费用
+    /// @dev 必须通过致电 #collect 单独收取费用
+    /// @param tickLower 消耗流动性的头寸的下限
+    /// @param tickUpper 消耗流动性的头寸的上限
+    /// @param amount 要燃烧多少流动性
+    /// @return amount0 发送给接收者的 token0 数量
+    /// @return amount1 发送给接收者的 token1 数量
     function burn(
         int24 tickLower,
         int24 tickUpper,
         uint128 amount
     ) external returns (uint256 amount0, uint256 amount1);
 
-    /// @notice Swap token0 for token1, or token1 for token0
-    /// @dev The caller of this method receives a callback in the form of IUniswapV3SwapCallback#uniswapV3SwapCallback
-    /// @param recipient The address to receive the output of the swap
-    /// @param zeroForOne The direction of the swap, true for token0 to token1, false for token1 to token0
-    /// @param amountSpecified The amount of the swap, which implicitly configures the swap as exact input (positive), or exact output (negative)
-    /// @param sqrtPriceLimitX96 The Q64.96 sqrt price limit. If zero for one, the price cannot be less than this
-    /// value after the swap. If one for zero, the price cannot be greater than this value after the swap
-    /// @param data Any data to be passed through to the callback
-    /// @return amount0 The delta of the balance of token0 of the pool, exact when negative, minimum when positive
-    /// @return amount1 The delta of the balance of token1 of the pool, exact when negative, minimum when positive
+    /// @notice 将 token0 交换为 token1，或将 token1 交换为 token0
+    /// @dev 该方法的调用者收到 IUniswapV3SwapCallback#uniswapV3SwapCallback 形式的回调
+    /// @param 接收者 接收交换输出的地址
+    /// @param ZeroForOne 交换方向，true表示token0到token1，false表示token1到token0
+    /// @param amountSpecified 交换金额，隐式将交换配置为精确输入（正）或精确输出（负）
+    /// @param sqrtPriceLimitX96 Q64.96 sqrt 价格限制。如果以零换一，价格不能低于这个
+    /// 交换后的值。如果一换零，互换后价格不能大于这个值
+    /// @param data 要传递给回调的任何数据
+    /// @return amount0 池子 token0 余额的 delta，负数时精确，正数时最小
+    /// @return amount1 池中token1余额的delta，负数时精确，正数时最小
     function swap(
         address recipient,
         bool zeroForOne,
@@ -80,14 +80,14 @@ interface IUniswapV3PoolActions {
         bytes calldata data
     ) external returns (int256 amount0, int256 amount1);
 
-    /// @notice Receive token0 and/or token1 and pay it back, plus a fee, in the callback
-    /// @dev The caller of this method receives a callback in the form of IUniswapV3FlashCallback#uniswapV3FlashCallback
-    /// @dev Can be used to donate underlying tokens pro-rata to currently in-range liquidity providers by calling
-    /// with 0 amount{0,1} and sending the donation amount(s) from the callback
-    /// @param recipient The address which will receive the token0 and token1 amounts
-    /// @param amount0 The amount of token0 to send
-    /// @param amount1 The amount of token1 to send
-    /// @param data Any data to be passed through to the callback
+    /// @notice 接收 token0 和/或 token1 并在回调中支付费用
+    /// @dev 该方法的调用者收到 IUniswapV3FlashCallback#uniswapV3FlashCallback 形式的回调
+    /// @dev 可用于通过调用按比例向当前范围内的流动性提供者捐赠基础代币
+    /// 金额为 0{0,1} 并从回调中发送捐赠金额
+    /// @param 接收者 将接收 token0 和 token1 金额的地址
+    /// @param amount0 要发送的 token0 的数量
+    /// @param amount1 要发送的 token1 的数量
+    /// @param data 要传递给回调的任何数据
     function flash(
         address recipient,
         uint256 amount0,
@@ -95,9 +95,9 @@ interface IUniswapV3PoolActions {
         bytes calldata data
     ) external;
 
-    /// @notice Increase the maximum number of price and liquidity observations that this pool will store
-    /// @dev This method is no-op if the pool already has an observationCardinalityNext greater than or equal to
-    /// the input observationCardinalityNext.
-    /// @param observationCardinalityNext The desired minimum number of observations for the pool to store
+    /// @notice 增加该池将存储的价格和流动性观察的最大数量
+    /// @dev 如果池中已经有一个observationCardinalityNext大于或等于，则此方法是无操作的
+    /// 输入观察CardinalityNext。
+    /// @param ObservationCardinalityNext 池要存储的所需最小观测值数量
     function increaseObservationCardinalityNext(uint16 observationCardinalityNext) external;
 }

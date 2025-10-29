@@ -5,23 +5,23 @@ import "forge-std/Script.sol";
 import "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
 
 /**
- * @title CalculateInitCodeHash
+ * @title 计算 InitCodeHash
  * @notice 计算 UniswapV3Pool 的 init code hash
- * @dev 这个 hash 值用于 CREATE2 地址预计算
+ * @dev 该哈希值用于 CREATE2 地址预计算
  *
- * 在 Uniswap V3 中，池子地址通过 CREATE2 部署，可以在链下预先计算：
+ * 在 Uniswap V3 中，池地址通过 CREATE2 部署，可以在链下预先计算：
  *
- * address = keccak256(
- *     abi.encodePacked(
- *         hex'ff',
- *         factory,
- *         keccak256(abi.encodePacked(token0, token1, fee)),
- *         POOL_INIT_CODE_HASH  // <-- 这里需要的值
- *     )
- * )
+ * 地址 = keccak256(
+ *     abi.encodePacked(              // 拼接输入参数
+ *         hex'ff',                   // CREATE2 固定前缀
+ *         factory,                   // 工厂地址
+ *         keccak256(abi.encodePacked(token0, token1, fee)), // 代币与费率哈希
+ *         POOL_INIT_CODE_HASH        // <-- 这里需要的值
+ *     )                            // 编码结束
+ * )                                // 计算地址
  *
- * 运行方式：
- * forge script script/CalculateInitCodeHash.s.sol
+ * 使用方式：
+ * forge script script/CalculateInitCodeHash.s.sol  // 运行脚本命令
  */
 contract CalculateInitCodeHash is Script {
     function run() public view {

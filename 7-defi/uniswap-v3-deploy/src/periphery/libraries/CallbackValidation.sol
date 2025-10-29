@@ -4,14 +4,14 @@ pragma solidity =0.7.6;
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import './PoolAddress.sol';
 
-/// @notice Provides validation for callbacks from Uniswap V3 Pools
+/// @notice 为来自 Uniswap V3 池的回调提供验证
 library CallbackValidation {
-    /// @notice Returns the address of a valid Uniswap V3 Pool
-    /// @param factory The contract address of the Uniswap V3 factory
-    /// @param tokenA The contract address of either token0 or token1
-    /// @param tokenB The contract address of the other token
-    /// @param fee The fee collected upon every swap in the pool, denominated in hundredths of a bip
-    /// @return pool The V3 pool contract address
+    /// @notice 返回有效 Uniswap V3 池的地址
+    /// @param 工厂 Uniswap V3 工厂的合约地址
+    /// @param tokenA token0或token1的合约地址
+    /// @param tokenB 另一个代币的合约地址
+    /// @param 费用 池中每次掉期收取的费用，以百分之一 BIP 计价
+    /// @return pool V3池合约地址
     function verifyCallback(
         address factory,
         address tokenA,
@@ -21,10 +21,10 @@ library CallbackValidation {
         return verifyCallback(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee));
     }
 
-    /// @notice Returns the address of a valid Uniswap V3 Pool
-    /// @param factory The contract address of the Uniswap V3 factory
-    /// @param poolKey The identifying key of the V3 pool
-    /// @return pool The V3 pool contract address
+    /// @notice 返回有效 Uniswap V3 池的地址
+    /// @param 工厂 Uniswap V3 工厂的合约地址
+    /// @param poolKey V3池的识别键
+    /// @return pool V3池合约地址
     function verifyCallback(address factory, PoolAddress.PoolKey memory poolKey)
         internal
         view

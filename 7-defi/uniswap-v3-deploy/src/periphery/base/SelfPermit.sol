@@ -7,10 +7,10 @@ import '@openzeppelin/contracts/drafts/IERC20Permit.sol';
 import '../interfaces/ISelfPermit.sol';
 import '../interfaces/external/IERC20PermitAllowed.sol';
 
-/// @title Self Permit
-/// @notice Functionality to call permit on any EIP-2612-compliant token for use in the route
-/// @dev These functions are expected to be embedded in multicalls to allow EOAs to approve a contract and call a function
-/// that requires an approval in a single transaction.
+/// @title 自助许可证
+/// @notice 调用任何符合 EIP-2612 的令牌的许可以在路由中使用的功能
+/// @dev 这些函数预计将嵌入多重调用中，以允许 EOA 批准合约并调用函数
+/// 需要在单笔交易中获得批准。
 abstract contract SelfPermit is ISelfPermit {
     /// @inheritdoc ISelfPermit
     function selfPermit(

@@ -19,34 +19,34 @@ contract TestUniswapV3ReentrantCallee is IUniswapV3SwapCallback {
         int256,
         bytes calldata
     ) external override {
-        // try to reenter swap
+        // 尝试重新进入交换
         try IUniswapV3Pool(msg.sender).swap(address(0), false, 1, 0, new bytes(0)) {} catch Error(
             string memory reason
         ) {
             require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));
         }
 
-        // try to reenter mint
+        // 尝试重新输入薄荷
         try IUniswapV3Pool(msg.sender).mint(address(0), 0, 0, 0, new bytes(0)) {} catch Error(string memory reason) {
             require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));
         }
 
-        // try to reenter collect
+        // 尝试重新输入收集
         try IUniswapV3Pool(msg.sender).collect(address(0), 0, 0, 0, 0) {} catch Error(string memory reason) {
             require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));
         }
 
-        // try to reenter burn
+        // 尝试重新进入烧伤状态
         try IUniswapV3Pool(msg.sender).burn(0, 0, 0) {} catch Error(string memory reason) {
             require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));
         }
 
-        // try to reenter flash
+        // 尝试重新进入flash
         try IUniswapV3Pool(msg.sender).flash(address(0), 0, 0, new bytes(0)) {} catch Error(string memory reason) {
             require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));
         }
 
-        // try to reenter collectProtocol
+        // 尝试重新输入collectProtocol
         try IUniswapV3Pool(msg.sender).collectProtocol(address(0), 0, 0) {} catch Error(string memory reason) {
             require(keccak256(abi.encode(reason)) == keccak256(abi.encode(expectedReason)));
         }

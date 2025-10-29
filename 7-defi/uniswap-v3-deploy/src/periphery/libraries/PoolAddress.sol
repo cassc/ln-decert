@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-/// @title Provides functions for deriving a pool address from the factory, tokens, and the fee
+/// @title 提供从工厂、代币和费用中获取矿池地址的函数
 library PoolAddress {
     bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
 
-    /// @notice The identifying key of the pool
+    /// @notice 矿池的识别键
     struct PoolKey {
         address token0;
         address token1;
         uint24 fee;
     }
 
-    /// @notice Returns PoolKey: the ordered tokens with the matched fee levels
-    /// @param tokenA The first token of a pool, unsorted
-    /// @param tokenB The second token of a pool, unsorted
-    /// @param fee The fee level of the pool
-    /// @return Poolkey The pool details with ordered token0 and token1 assignments
+    /// @notice 返回 PoolKey：具有匹配费用水平的已订购代币
+    /// @param tokenA 池中的第一个令牌，未排序
+    /// @param tokenB 池中的第二个令牌，未排序
+    /// @param Fee 矿池的费用水平
+    /// @return Poolkey 带有有序 token0 和 token1 分配的池详细信息
     function getPoolKey(
         address tokenA,
         address tokenB,
@@ -26,10 +26,10 @@ library PoolAddress {
         return PoolKey({token0: tokenA, token1: tokenB, fee: fee});
     }
 
-    /// @notice Deterministically computes the pool address given the factory and PoolKey
-    /// @param factory The Uniswap V3 factory contract address
-    /// @param key The PoolKey
-    /// @return pool The contract address of the V3 pool
+    /// @notice 给定工厂和 PoolKey 确定性地计算池地址
+    /// @param 工厂 Uniswap V3 工厂合约地址
+    /// @param 密钥 PoolKey
+    /// @return pool V3池的合约地址
     function computeAddress(address factory, PoolKey memory key) internal pure returns (address pool) {
         require(key.token0 < key.token1);
         pool = address(

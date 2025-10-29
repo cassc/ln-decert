@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-/// @title Pool state that can change
-/// @notice These methods compose the pool's state, and can change with any frequency including multiple times
-/// per transaction
+/// @title 可以改变的池状态
+/// @notice 这些方法组成了池的状态，并且可以以任何频率（包括多次）改变
+/// 每笔交易
 interface IUniswapV3PoolState {
-    /// @notice The 0th storage slot in the pool stores many values, and is exposed as a single method to save gas
-    /// when accessed externally.
-    /// @return sqrtPriceX96 The current price of the pool as a sqrt(token1/token0) Q64.96 value
-    /// tick The current tick of the pool, i.e. according to the last tick transition that was run.
-    /// This value may not always be equal to SqrtTickMath.getTickAtSqrtRatio(sqrtPriceX96) if the price is on a tick
-    /// boundary.
-    /// observationIndex The index of the last oracle observation that was written,
-    /// observationCardinality The current maximum number of observations stored in the pool,
-    /// observationCardinalityNext The next maximum number of observations, to be updated when the observation.
-    /// feeProtocol The protocol fee for both tokens of the pool.
-    /// Encoded as two 4 bit values, where the protocol fee of token1 is shifted 4 bits and the protocol fee of token0
-    /// is the lower 4 bits. Used as the denominator of a fraction of the swap fee, e.g. 4 means 1/4th of the swap fee.
-    /// unlocked Whether the pool is currently locked to reentrancy
+    /// @notice 池中的第 0 个存储槽存储许多值，并作为单一方法公开以节省 Gas
+    /// 当外部访问时。
+    /// @return sqrtPriceX96 矿池的当前价格，以 sqrt(token1/token0) Q64.96 值表示
+    /// 池的当前刻度，即根据运行的最后一个刻度转换。
+    /// 如果价格处于变动状态，则该值可能并不总是等于 SqrtTickMath.getTickAtSqrtRatio(sqrtPriceX96)
+    /// 边界。
+    /// ObservationIndex 最后写入的预言机观察的索引，
+    /// 观察基数 当前存储在池中的最大观察数，
+    /// ObservationCardinalityNext 下一个最大观察数，当观察时要更新。
+    /// FeeProtocol 池中两种代币的协议费用。
+    /// 编码为两个4位值，其中token1的协议费用移位4位，token0的协议费用移位4位
+    /// 是低4位。用作掉期费用一小部分的分母，例如4 表示互换费用的 1/4。
+    /// 已解锁 池当前是否锁定为可重入
     function slot0()
         external
         view
@@ -31,36 +31,36 @@ interface IUniswapV3PoolState {
             bool unlocked
         );
 
-    /// @notice The fee growth as a Q128.128 fees of token0 collected per unit of liquidity for the entire life of the pool
-    /// @dev This value can overflow the uint256
+    /// @notice 费用增长为 Q128.128 在池的整个生命周期内每单位流动性收取的 token0 费用
+    /// @dev 该值可能会溢出 uint256
     function feeGrowthGlobal0X128() external view returns (uint256);
 
-    /// @notice The fee growth as a Q128.128 fees of token1 collected per unit of liquidity for the entire life of the pool
-    /// @dev This value can overflow the uint256
+    /// @notice 在池的整个生命周期内，每单位流动性收取的代币 1 费用为 Q128.128 的费用增长
+    /// @dev 该值可能会溢出 uint256
     function feeGrowthGlobal1X128() external view returns (uint256);
 
-    /// @notice The amounts of token0 and token1 that are owed to the protocol
-    /// @dev Protocol fees will never exceed uint128 max in either token
+    /// @notice 欠协议的 token0 和 token1 的数量
+    /// @dev 任一代币的协议费用永远不会超过 uint128 max
     function protocolFees() external view returns (uint128 token0, uint128 token1);
 
-    /// @notice The currently in range liquidity available to the pool
-    /// @dev This value has no relationship to the total liquidity across all ticks
+    /// @notice 资金池当前可用的流动性范围
+    /// @dev 该值与所有报价的总流动性无关
     function liquidity() external view returns (uint128);
 
-    /// @notice Look up information about a specific tick in the pool
-    /// @param tick The tick to look up
-    /// @return liquidityGross the total amount of position liquidity that uses the pool either as tick lower or
-    /// tick upper,
-    /// liquidityNet how much liquidity changes when the pool price crosses the tick,
-    /// feeGrowthOutside0X128 the fee growth on the other side of the tick from the current tick in token0,
-    /// feeGrowthOutside1X128 the fee growth on the other side of the tick from the current tick in token1,
-    /// tickCumulativeOutside the cumulative tick value on the other side of the tick from the current tick
-    /// secondsPerLiquidityOutsideX128 the seconds spent per liquidity on the other side of the tick from the current tick,
-    /// secondsOutside the seconds spent on the other side of the tick from the current tick,
-    /// initialized Set to true if the tick is initialized, i.e. liquidityGross is greater than 0, otherwise equal to false.
-    /// Outside values can only be used if the tick is initialized, i.e. if liquidityGross is greater than 0.
-    /// In addition, these values are only relative and must be used only in comparison to previous snapshots for
-    /// a specific position.
+    /// @notice 查找有关池中特定蜱虫的信息
+    /// @param 勾选要查找的勾选
+    /// @return 流动性总计使用池的头寸流动性总额，无论是价格下跌还是
+    /// 上面打勾，
+    /// 当资金池价格穿过刻度线时，流动性净值有多少流动性变化，
+    /// FeeGrowthOutside0X128 相对于 token0 中当前报价在报价另一侧的费用增长，
+    /// FeeGrowthOutside1X128 相对于 token1 中当前报价在报价另一侧的费用增长，
+    /// tickCumulativeOutside 从当前报价开始的报价另一侧的累计报价值
+    /// SecondsPerLiquidityOutsideX128 当前报价在报价另一侧每个流动性花费的秒数，
+    /// 秒数 在当前刻度线另一侧花费的秒数之外，
+    /// 初始化 如果刻度已初始化，即流动性Gross 大于 0，则设置为 true，否则等于 false。
+    /// 仅当刻度已初始化时（即，流动性总金额大于 0）才能使用外部值。
+    /// 此外，这些值只是相对值，并且只能用于与之前的快照进行比较
+    /// 一个特定的位置。
     function ticks(int24 tick)
         external
         view
@@ -75,16 +75,16 @@ interface IUniswapV3PoolState {
             bool initialized
         );
 
-    /// @notice Returns 256 packed tick initialized boolean values. See TickBitmap for more information
+    /// @notice 返回 256 个打包刻度初始化的布尔值。请参阅 TickBitmap 了解更多信息
     function tickBitmap(int16 wordPosition) external view returns (uint256);
 
-    /// @notice Returns the information about a position by the position's key
-    /// @param key The position's key is a hash of a preimage composed by the owner, tickLower and tickUpper
-    /// @return _liquidity The amount of liquidity in the position,
-    /// Returns feeGrowthInside0LastX128 fee growth of token0 inside the tick range as of the last mint/burn/poke,
-    /// Returns feeGrowthInside1LastX128 fee growth of token1 inside the tick range as of the last mint/burn/poke,
-    /// Returns tokensOwed0 the computed amount of token0 owed to the position as of the last mint/burn/poke,
-    /// Returns tokensOwed1 the computed amount of token1 owed to the position as of the last mint/burn/poke
+    /// @notice 通过位置键返回有关位置的信息
+    /// @param key 位置的键是由所有者、tickLower 和tickUpper 组成的原像的哈希值
+    /// @return _liquidity 头寸的流动资金量，
+    /// 返回截至最后一次铸币/销毁/戳戳的价格范围内代币0的feeGrowthInside0LastX128费用增长，
+    /// 返回截至最后一次铸币/销毁/戳戳的价格范围内代币 1 的 FeeGrowthInside1LastX128 费用增长，
+    /// 返回 tokensOwed0 计算出的 token0 欠最后一次铸币/销毁/戳的位置的金额，
+    /// 返回 tokensOwed1，计算出截至最后一次铸币/销毁/戳入位置所欠的 token1 数量
     function positions(bytes32 key)
         external
         view
@@ -96,14 +96,14 @@ interface IUniswapV3PoolState {
             uint128 tokensOwed1
         );
 
-    /// @notice Returns data about a specific observation index
-    /// @param index The element of the observations array to fetch
-    /// @dev You most likely want to use #observe() instead of this method to get an observation as of some amount of time
-    /// ago, rather than at a specific index in the array.
-    /// @return blockTimestamp The timestamp of the observation,
-    /// Returns tickCumulative the tick multiplied by seconds elapsed for the life of the pool as of the observation timestamp,
-    /// Returns secondsPerLiquidityCumulativeX128 the seconds per in range liquidity for the life of the pool as of the observation timestamp,
-    /// Returns initialized whether the observation has been initialized and the values are safe to use
+    /// @notice 返回有关特定观察索引的数据
+    /// @param index 要获取的观察数组的元素
+    /// @dev 您很可能希望使用 #observe() 而不是此方法来获取一段时间内的观察结果
+    /// 之前，而不是在数组中的特定索引处。
+    /// @return blockTimestamp 观察的时间戳，
+    /// 返回tickCumulative，即tick乘以截至观察时间戳的池生命周期所经过的秒数，
+    /// 返回 timesPerLiquidityCumulativeX128 截至观察时间戳的池生命周期内每个流动性范围内的秒数，
+    /// 返回已初始化的观察是否已初始化并且值是否可以安全使用
     function observations(uint256 index)
         external
         view

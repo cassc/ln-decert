@@ -13,8 +13,8 @@ import '../libraries/LiquidityAmounts.sol';
 import './PeripheryPayments.sol';
 import './PeripheryImmutableState.sol';
 
-/// @title Liquidity management functions
-/// @notice Internal functions for safely managing liquidity in Uniswap V3
+/// @title 流动性管理功能
+/// @notice Uniswap V3 中安全管理流动性的内部函数
 abstract contract LiquidityManagement is IUniswapV3MintCallback, PeripheryImmutableState, PeripheryPayments {
     struct MintCallbackData {
         PoolAddress.PoolKey poolKey;
@@ -47,7 +47,7 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, PeripheryImmuta
         uint256 amount1Min;
     }
 
-    /// @notice Add liquidity to an initialized pool
+    /// @notice 向初始化池添加流动性
     function addLiquidity(AddLiquidityParams memory params)
         internal
         returns (
@@ -62,7 +62,7 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, PeripheryImmuta
 
         pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, poolKey));
 
-        // compute the liquidity amount
+        // 计算流动性金额
         {
             (uint160 sqrtPriceX96, , , , , , ) = pool.slot0();
             uint160 sqrtRatioAX96 = TickMath.getSqrtRatioAtTick(params.tickLower);

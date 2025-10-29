@@ -19,11 +19,11 @@
 
 ```mermaid
 graph LR
-    A[价格区间选择] --> B[Pa: 下限价格]
-    A --> C[Pb: 上限价格]
-    B --> D[实际流动性 = L / sqrt(Pa)]
-    C --> E[实际流动性 = L * sqrt(Pb)]
-    D --> F[资本效率提升]
+    A["价格区间选择"] --> B["Pa: 下限价格"]
+    A --> C["Pb: 上限价格"]
+    B --> D["实际流动性 = L / sqrt(Pa)"]
+    C --> E["实际流动性 = L * sqrt(Pb)"]
+    D --> F["资本效率提升"]
     E --> F
 
     style A fill:#e1f5ff
@@ -98,8 +98,8 @@ sequenceDiagram
 
 ```mermaid
 graph LR
-    A[Tick Index] -->|tick = log₁.₀₀₀₁(price)| B[Price]
-    B -->|price = 1.0001^tick| A
+    A[Tick Index] -->|"tick = log_{1.0001}(price)"| B[Price]
+    B -->|"price = 1.0001^tick"| A
 
     C[Tick Spacing] -->|每个 fee tier 固定| D[可用的 tick]
 
@@ -141,19 +141,24 @@ sequenceDiagram
 ### 集中流动性可视化
 
 ```mermaid
-graph TD
-    A[当前价格] -->|价格上涨| B[进入 tick 2]
-    A -->|价格下跌| C[进入 tick -2]
+flowchart TD
+    Price["当前价格 Tick 0"]
+    Price -->|"价格上涨"| Up["进入 Tick 3~5"]
+    Price -->|"价格下跌"| Down["进入 Tick -5~-3"]
 
-    B --> D[新的活跃流动性]
-    C --> E[新的活跃流动性]
+    subgraph Liquidity["流动性分布 (Tick 区间)"]
+        direction TB
+        Bucket1["Tick -5~-3\n流动性: 1000"]
+        Bucket2["Tick -2~2\n流动性: 5000"]
+        Bucket3["Tick 3~5\n流动性: 800"]
+    end
 
-    F[Tick -5 到 -3<br/>流动性 = 1000]
-    G[Tick -2 到 2<br/>流动性 = 5000]
-    H[Tick 3 到 5<br/>流动性 = 800]
+    Up --> Bucket3
+    Down --> Bucket1
+    Price --> Bucket2
 
-    style A fill:#ffe1e1
-    style G fill:#e1ffe1
+    classDef active fill:#e1ffe1,stroke:#13a10e;
+    class Bucket2 active
 ```
 
 ## 📁 项目结构

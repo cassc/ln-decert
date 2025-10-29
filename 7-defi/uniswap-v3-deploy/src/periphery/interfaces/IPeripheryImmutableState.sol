@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-/// @title Immutable state
-/// @notice Functions that return immutable state of the router
+/// @title 不可变状态
+/// @notice 返回路由器不可变状态的函数
 interface IPeripheryImmutableState {
-    /// @return Returns the address of the Uniswap V3 factory
+    /// @return 返回 Uniswap V3 工厂的地址
     function factory() external view returns (address);
 
-    /// @return Returns the address of WETH9
+    /// @return 返回 WETH9 的地址
     function WETH9() external view returns (address);
 }

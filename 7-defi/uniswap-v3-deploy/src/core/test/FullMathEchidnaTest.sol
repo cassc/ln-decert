@@ -33,7 +33,7 @@ contract FullMathEchidnaTest {
             return;
         }
 
-        // recompute x and y via mulDiv of the result of floor(x*y/d), should always be less than original inputs by < d
+        // 通过 Floor(x*y/d) 结果的 mulDiv 重新计算 x 和 y，应始终小于原始输入 < d
         uint256 x2 = FullMath.mulDiv(z, d, y);
         uint256 y2 = FullMath.mulDiv(z, d, x);
         assert(x2 <= x);
@@ -55,7 +55,7 @@ contract FullMathEchidnaTest {
             return;
         }
 
-        // recompute x and y via mulDiv of the result of floor(x*y/d), should always be less than original inputs by < d
+        // 通过 Floor(x*y/d) 结果的 mulDiv 重新计算 x 和 y，应始终小于原始输入 < d
         uint256 x2 = FullMath.mulDiv(z, d, y);
         uint256 y2 = FullMath.mulDiv(z, d, x);
         assert(x2 >= x);

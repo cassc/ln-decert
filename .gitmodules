@@ -4,6 +4,15 @@
 [submodule "5-wallet-fullstack/2-nft-market-backend-event/lib/openzeppelin-contracts"]
 	path = 5-wallet-fullstack/2-nft-market-backend-event/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "4-foundry/3-nft-market/lib/openzeppelin-contracts"]
+	path = 4-foundry/3-nft-market/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "7-defi/uniswap-v3-deploy/v3-core"]
+	path = 7-defi/uniswap-v3-deploy/v3-core
+	url = https://github.com/Uniswap/v3-core
+[submodule "7-defi/uniswap-v3-deploy/v3-periphery"]
+	path = 7-defi/uniswap-v3-deploy/v3-periphery
+	url = https://github.com/Uniswap/v3-periphery
 [submodule "7-defi/vesting-foundry/lib/forge-std"]
 	path = 7-defi/vesting-foundry/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std

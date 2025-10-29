@@ -5,18 +5,18 @@ import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 import '@uniswap/v3-core/contracts/libraries/UnsafeMath.sol';
 import '@uniswap/v3-core/contracts/libraries/FixedPoint96.sol';
 
-/// @title Functions based on Q64.96 sqrt price and liquidity
-/// @notice Exposes two functions from @uniswap/v3-core SqrtPriceMath
-/// that use square root of price as a Q64.96 and liquidity to compute deltas
+/// @title 基于 Q64.96 sqrt 价格和流动性的功能
+/// @notice 从 @uniswap/v3-core SqrtPriceMath 公开两个函数
+/// 使用价格的平方根作为 Q64.96 和流动性来计算 delta
 library SqrtPriceMathPartial {
-    /// @notice Gets the amount0 delta between two prices
-    /// @dev Calculates liquidity / sqrt(lower) - liquidity / sqrt(upper),
-    /// i.e. liquidity * (sqrt(upper) - sqrt(lower)) / (sqrt(upper) * sqrt(lower))
-    /// @param sqrtRatioAX96 A sqrt price
-    /// @param sqrtRatioBX96 Another sqrt price
-    /// @param liquidity The amount of usable liquidity
-    /// @param roundUp Whether to round the amount up or down
-    /// @return amount0 Amount of token0 required to cover a position of size liquidity between the two passed prices
+    /// @notice 获取两个价格之间的 amount0 delta
+    /// @dev 计算流动性 / sqrt(下) - 流动性 / sqrt(上),
+    /// 即流动性 * (sqrt(upper) - sqrt(lower)) / (sqrt(upper) * sqrt(lower))
+    /// @param sqrtRatioAX96 开方价格
+    /// @param sqrtRatioBX96 另一个 sqrt 价格
+    /// @param 流动性 可用流动性的数量
+    /// @param roundUp 是否向上或向下舍入金额
+    /// @return amount0 覆盖两个传递价格之间的流动性头寸所需的 token0 数量
     function getAmount0Delta(
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96,
@@ -39,13 +39,13 @@ library SqrtPriceMathPartial {
                 : FullMath.mulDiv(numerator1, numerator2, sqrtRatioBX96) / sqrtRatioAX96;
     }
 
-    /// @notice Gets the amount1 delta between two prices
-    /// @dev Calculates liquidity * (sqrt(upper) - sqrt(lower))
-    /// @param sqrtRatioAX96 A sqrt price
-    /// @param sqrtRatioBX96 Another sqrt price
-    /// @param liquidity The amount of usable liquidity
-    /// @param roundUp Whether to round the amount up, or down
-    /// @return amount1 Amount of token1 required to cover a position of size liquidity between the two passed prices
+    /// @notice 获取两个价格之间的 amount1 Delta
+    /// @dev 计算流动性 * (sqrt(上) - sqrt(下))
+    /// @param sqrtRatioAX96 开方价格
+    /// @param sqrtRatioBX96 另一个 sqrt 价格
+    /// @param 流动性 可用流动性的数量
+    /// @param roundUp 是否向上或向下舍入金额
+    /// @return amount1 弥补两个传递价格之间的流动性头寸所需的 token1 数量
     function getAmount1Delta(
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96,

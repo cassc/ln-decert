@@ -3,7 +3,7 @@ pragma solidity =0.7.6;
 
 import '../base/SelfPermit.sol';
 
-/// @dev Same as SelfPermit but not abstract
+/// @dev 与 SelfPermit 相同但不抽象
 contract SelfPermitTest is SelfPermit {
 
 }

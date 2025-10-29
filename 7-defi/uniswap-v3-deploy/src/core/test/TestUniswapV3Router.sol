@@ -11,7 +11,7 @@ import '../interfaces/IUniswapV3Pool.sol';
 contract TestUniswapV3Router is IUniswapV3SwapCallback {
     using SafeCast for uint256;
 
-    // flash swaps for an exact amount of token0 in the output pool
+    // 闪存交换输出池中确切数量的 token0
     function swapForExact0Multi(
         address recipient,
         address poolInput,
@@ -29,7 +29,7 @@ contract TestUniswapV3Router is IUniswapV3SwapCallback {
         );
     }
 
-    // flash swaps for an exact amount of token1 in the output pool
+    // 闪存交换输出池中确切数量的 token1
     function swapForExact1Multi(
         address recipient,
         address poolInput,
@@ -59,7 +59,7 @@ contract TestUniswapV3Router is IUniswapV3SwapCallback {
         (address[] memory pools, address payer) = abi.decode(data, (address[], address));
 
         if (pools.length == 1) {
-            // get the address and amount of the token that we need to pay
+            // 获取我们需要支付的代币地址和金额
             address tokenToBePaid =
                 amount0Delta > 0 ? IUniswapV3Pool(msg.sender).token0() : IUniswapV3Pool(msg.sender).token1();
             int256 amountToBePaid = amount0Delta > 0 ? amount0Delta : amount1Delta;

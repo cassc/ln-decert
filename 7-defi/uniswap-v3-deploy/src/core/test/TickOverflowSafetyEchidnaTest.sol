@@ -13,12 +13,12 @@ contract TickOverflowSafetyEchidnaTest {
     mapping(int24 => Tick.Info) private ticks;
     int24 private tick = 0;
 
-    // used to track how much total liquidity has been added. should never be negative
+    // 用于跟踪已添加的总流动性。永远不应该是负数
     int256 totalLiquidity = 0;
-    // half the cap of fee growth has happened, this can overflow
+    // 费用增长上限已经达到一半，可能会溢出
     uint256 private feeGrowthGlobal0X128 = type(uint256).max / 2;
     uint256 private feeGrowthGlobal1X128 = type(uint256).max / 2;
-    // how much total growth has happened, this cannot overflow
+    // 总增长发生了多少，这不能溢出
     uint256 private totalGrowth0 = 0;
     uint256 private totalGrowth1 = 0;
 
@@ -84,7 +84,7 @@ contract TickOverflowSafetyEchidnaTest {
         }
 
         totalLiquidity += liquidityDelta;
-        // requires should have prevented this
+        // 要求应该可以防止这种情况
         assert(totalLiquidity >= 0);
 
         if (totalLiquidity == 0) {

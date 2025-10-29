@@ -2,17 +2,17 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-/// @title Creates and initializes V3 Pools
-/// @notice Provides a method for creating and initializing a pool, if necessary, for bundling with other methods that
-/// require the pool to exist.
+/// @title 创建并初始化 V3 池
+/// @notice 提供创建和初始化池的方法（如有必要），以便与其他方法捆绑在一起
+/// 要求池存在。
 interface IPoolInitializer {
-    /// @notice Creates a new pool if it does not exist, then initializes if not initialized
-    /// @dev This method can be bundled with others via IMulticall for the first action (e.g. mint) performed against a pool
-    /// @param token0 The contract address of token0 of the pool
-    /// @param token1 The contract address of token1 of the pool
-    /// @param fee The fee amount of the v3 pool for the specified token pair
-    /// @param sqrtPriceX96 The initial square root price of the pool as a Q64.96 value
-    /// @return pool Returns the pool address based on the pair of tokens and fee, will return the newly created pool address if necessary
+    /// @notice 如果不存在则创建一个新池，如果未初始化则初始化
+    /// @dev 此方法可以通过 IMulticall 与其他方法捆绑，以针对池执行第一个操作（例如铸币）
+    /// @param token0 矿池token0的合约地址
+    /// @param token1 矿池token1的合约地址
+    /// @param Fee 指定代币对的 v3 池的费用金额
+    /// @param sqrtPriceX96 池的初始平方根价格，为 Q64.96 值
+    /// @return pool 根据代币和费用对返回矿池地址，如果需要将返回新创建的矿池地址
     function createAndInitializePoolIfNecessary(
         address token0,
         address token1,

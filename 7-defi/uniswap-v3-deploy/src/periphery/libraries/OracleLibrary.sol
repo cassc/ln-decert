@@ -5,14 +5,14 @@ import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 
-/// @title Oracle library
-/// @notice Provides functions to integrate with V3 pool oracle
+/// @title 甲骨文库
+/// @notice 提供与V3池oracle集成的功能
 library OracleLibrary {
-    /// @notice Calculates time-weighted means of tick and liquidity for a given Uniswap V3 pool
-    /// @param pool Address of the pool that we want to observe
-    /// @param secondsAgo Number of seconds in the past from which to calculate the time-weighted means
-    /// @return arithmeticMeanTick The arithmetic mean tick from (block.timestamp - secondsAgo) to block.timestamp
-    /// @return harmonicMeanLiquidity The harmonic mean liquidity from (block.timestamp - secondsAgo) to block.timestamp
+    /// @notice 计算给定 Uniswap V3 池的时间加权平均值和流动性
+    /// @param pool 我们要观察的池的地址
+    /// @param timesAgo 计算时间加权平均值的过去秒数
+    /// @return mathMeanTick 从 (block.timestamp - SecondsAgo) 到 block.timestamp 的算术平均刻度
+    /// @return HarmonicMeanLiquidity 从 (block.timestamp - SecondsAgo) 到 block.timestamp 的调和平均流动性
     function consult(address pool, uint32 secondsAgo)
         internal
         view
@@ -32,20 +32,20 @@ library OracleLibrary {
             secondsPerLiquidityCumulativeX128s[1] - secondsPerLiquidityCumulativeX128s[0];
 
         arithmeticMeanTick = int24(tickCumulativesDelta / secondsAgo);
-        // Always round to negative infinity
+        // 始终四舍五入到负无穷大
         if (tickCumulativesDelta < 0 && (tickCumulativesDelta % secondsAgo != 0)) arithmeticMeanTick--;
 
-        // We are multiplying here instead of shifting to ensure that harmonicMeanLiquidity doesn't overflow uint128
+        // 我们在这里相乘而不是移位，以确保 HarmonicMeanLiquidity 不会溢出 uint128
         uint192 secondsAgoX160 = uint192(secondsAgo) * type(uint160).max;
         harmonicMeanLiquidity = uint128(secondsAgoX160 / (uint192(secondsPerLiquidityCumulativesDelta) << 32));
     }
 
-    /// @notice Given a tick and a token amount, calculates the amount of token received in exchange
-    /// @param tick Tick value used to calculate the quote
-    /// @param baseAmount Amount of token to be converted
-    /// @param baseToken Address of an ERC20 token contract used as the baseAmount denomination
-    /// @param quoteToken Address of an ERC20 token contract used as the quoteAmount denomination
-    /// @return quoteAmount Amount of quoteToken received for baseAmount of baseToken
+    /// @notice 给定一个刻度和一个代币数量，计算在交换中收到的代币数量
+    /// @param 刻度 用于计算报价的刻度值
+    /// @param baseAmount 要转换的代币数量
+    /// @param 用作基本金额面额的 ERC20 代币合约的 baseToken 地址
+    /// @param quoteToken 用作 quoteAmount 面额的 ERC20 代币合约的地址
+    /// @return quoteAmount 收到的 quoteToken 数量，用于 baseAmount of baseToken
     function getQuoteAtTick(
         int24 tick,
         uint128 baseAmount,
@@ -54,7 +54,7 @@ library OracleLibrary {
     ) internal pure returns (uint256 quoteAmount) {
         uint160 sqrtRatioX96 = TickMath.getSqrtRatioAtTick(tick);
 
-        // Calculate quoteAmount with better precision if it doesn't overflow when multiplied by itself
+        // 如果与自身相乘时不溢出，则以更高的精度计算 quoteAmount
         if (sqrtRatioX96 <= type(uint128).max) {
             uint256 ratioX192 = uint256(sqrtRatioX96) * sqrtRatioX96;
             quoteAmount = baseToken < quoteToken
@@ -68,9 +68,9 @@ library OracleLibrary {
         }
     }
 
-    /// @notice Given a pool, it returns the number of seconds ago of the oldest stored observation
-    /// @param pool Address of Uniswap V3 pool that we want to observe
-    /// @return secondsAgo The number of seconds ago of the oldest observation stored for the pool
+    /// @notice 给定一个池，它返回最早存储的观察值之前的秒数
+    /// @param pool 我们想要观察的Uniswap V3池的地址
+    /// @return timesAgo 为池存储的最旧观察的秒数
     function getOldestObservationSecondsAgo(address pool) internal view returns (uint32 secondsAgo) {
         (, , uint16 observationIndex, uint16 observationCardinality, , , ) = IUniswapV3Pool(pool).slot0();
         require(observationCardinality > 0, 'NI');
@@ -78,8 +78,8 @@ library OracleLibrary {
         (uint32 observationTimestamp, , , bool initialized) =
             IUniswapV3Pool(pool).observations((observationIndex + 1) % observationCardinality);
 
-        // The next index might not be initialized if the cardinality is in the process of increasing
-        // In this case the oldest observation is always in index 0
+        // 如果基数正在增加，则下一个索引可能不会初始化
+        // 在这种情况下，最旧的观察值始终位于索引 0 中
         if (!initialized) {
             (observationTimestamp, , , ) = IUniswapV3Pool(pool).observations(0);
         }
@@ -87,18 +87,18 @@ library OracleLibrary {
         secondsAgo = uint32(block.timestamp) - observationTimestamp;
     }
 
-    /// @notice Given a pool, it returns the tick value as of the start of the current block
-    /// @param pool Address of Uniswap V3 pool
-    /// @return The tick that the pool was in at the start of the current block
+    /// @notice 给定一个池，它返回当前块开始时的刻度值
+    /// @param Uniswap V3 矿池地址
+    /// @return 当前块开始时池所在的刻度
     function getBlockStartingTickAndLiquidity(address pool) internal view returns (int24, uint128) {
         (, int24 tick, uint16 observationIndex, uint16 observationCardinality, , , ) = IUniswapV3Pool(pool).slot0();
 
-        // 2 observations are needed to reliably calculate the block starting tick
+        // 需要 2 次观察才能可靠地计算区块起始价格
         require(observationCardinality > 1, 'NEO');
 
-        // If the latest observation occurred in the past, then no tick-changing trades have happened in this block
-        // therefore the tick in `slot0` is the same as at the beginning of the current block.
-        // We don't need to check if this observation is initialized - it is guaranteed to be.
+        // 如果最新的观察发生在过去，则该区块中没有发生任何变动交易
+        // 因此，“slot0”中的刻度与当前块开头的刻度相同。
+        // 我们不需要检查这个观察是否被初始化——它肯定是被初始化的。
         (uint32 observationTimestamp, int56 tickCumulative, uint160 secondsPerLiquidityCumulativeX128, ) =
             IUniswapV3Pool(pool).observations(observationIndex);
         if (observationTimestamp != uint32(block.timestamp)) {
@@ -125,46 +125,46 @@ library OracleLibrary {
         return (tick, liquidity);
     }
 
-    /// @notice Information for calculating a weighted arithmetic mean tick
+    /// @notice 用于计算加权算术平均价格变动的信息
     struct WeightedTickData {
         int24 tick;
         uint128 weight;
     }
 
-    /// @notice Given an array of ticks and weights, calculates the weighted arithmetic mean tick
-    /// @param weightedTickData An array of ticks and weights
-    /// @return weightedArithmeticMeanTick The weighted arithmetic mean tick
-    /// @dev Each entry of `weightedTickData` should represents ticks from pools with the same underlying pool tokens. If they do not,
-    /// extreme care must be taken to ensure that ticks are comparable (including decimal differences).
-    /// @dev Note that the weighted arithmetic mean tick corresponds to the weighted geometric mean price.
+    /// @notice 给定一系列刻度和权重，计算加权算术平均刻度
+    /// @param WeightedTickData 价格变动和权重的数组
+    /// @return WeightedArithmeticMeanTick 加权算术平均刻度
+    /// @dev “weightedTickData”的每个条目应代表具有相同基础池代币的池中的报价。如果他们不这样做，
+    /// 必须格外小心，以确保报价具有可比性（包括小数差异）。
+    /// @dev 请注意，加权算术平均价格变动对应于加权几何平均价格。
     function getWeightedArithmeticMeanTick(WeightedTickData[] memory weightedTickData)
         internal
         pure
         returns (int24 weightedArithmeticMeanTick)
     {
-        // Accumulates the sum of products between each tick and its weight
+        // 累加每个刻度与其权重之间的乘积之和
         int256 numerator;
 
-        // Accumulates the sum of the weights
+        // 累加权重总和
         uint256 denominator;
 
-        // Products fit in 152 bits, so it would take an array of length ~2**104 to overflow this logic
+        // 产品适合 152 位，因此需要长度为 ~2**104 的数组才能溢出此逻辑
         for (uint256 i; i < weightedTickData.length; i++) {
             numerator += weightedTickData[i].tick * int256(weightedTickData[i].weight);
             denominator += weightedTickData[i].weight;
         }
 
         weightedArithmeticMeanTick = int24(numerator / int256(denominator));
-        // Always round to negative infinity
+        // 始终四舍五入到负无穷大
         if (numerator < 0 && (numerator % int256(denominator) != 0)) weightedArithmeticMeanTick--;
     }
 
-    /// @notice Returns the "synthetic" tick which represents the price of the first entry in `tokens` in terms of the last
-    /// @dev Useful for calculating relative prices along routes.
-    /// @dev There must be one tick for each pairwise set of tokens.
-    /// @param tokens The token contract addresses
-    /// @param ticks The ticks, representing the price of each token pair in `tokens`
-    /// @return syntheticTick The synthetic tick, representing the relative price of the outermost tokens in `tokens`
+    /// @notice 返回“合成”刻度，代表“tokens”中第一个条目相对于最后一个条目的价格
+    /// @dev 对于计算沿线的相对价格很有用。
+    /// @dev 每对标记集必须有一个刻度。
+    /// @param tokens 代币合约地址
+    /// @param 刻度线 刻度线，代表“tokens”中每个代币对的价格
+    /// @return SynthesisTick 合成价格变动，代表“tokens”中最外层代币的相对价格
     function getChainedPrice(address[] memory tokens, int24[] memory ticks)
         internal
         pure
@@ -172,8 +172,8 @@ library OracleLibrary {
     {
         require(tokens.length - 1 == ticks.length, 'DL');
         for (uint256 i = 1; i <= ticks.length; i++) {
-            // check the tokens for address sort order, then accumulate the
-            // ticks into the running synthetic tick, ensuring that intermediate tokens "cancel out"
+            // 检查令牌的地址排序顺序，然后累积
+            // 滴答进入正在运行的合成滴答，确保中间代币“抵消”
             tokens[i - 1] < tokens[i] ? syntheticTick += ticks[i - 1] : syntheticTick -= ticks[i - 1];
         }
     }

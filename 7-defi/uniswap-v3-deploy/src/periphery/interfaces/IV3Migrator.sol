@@ -6,8 +6,8 @@ import './IMulticall.sol';
 import './ISelfPermit.sol';
 import './IPoolInitializer.sol';
 
-/// @title V3 Migrator
-/// @notice Enables migration of liqudity from Uniswap v2-compatible pairs into Uniswap v3 pools
+/// @title V3迁移器
+/// @notice 允许将流动性从 Uniswap v2 兼容货币对迁移到 Uniswap v3 池中
 interface IV3Migrator is IMulticall, ISelfPermit, IPoolInitializer {
     struct MigrateParams {
         address pair; // the Uniswap v2-compatible pair
@@ -25,10 +25,10 @@ interface IV3Migrator is IMulticall, ISelfPermit, IPoolInitializer {
         bool refundAsETH;
     }
 
-    /// @notice Migrates liquidity to v3 by burning v2 liquidity and minting a new position for v3
-    /// @dev Slippage protection is enforced via `amount{0,1}Min`, which should be a discount of the expected values of
-    /// the maximum amount of v3 liquidity that the v2 liquidity can get. For the special case of migrating to an
-    /// out-of-range position, `amount{0,1}Min` may be set to 0, enforcing that the position remains out of range
-    /// @param params The params necessary to migrate v2 liquidity, encoded as `MigrateParams` in calldata
+    /// @notice 通过燃烧 v2 流动性并为 v3 铸造新头寸，将流动性迁移到 v3
+    /// @dev 滑点保护是通过“amount{0,1}Min”强制执行的，它应该是预期值的折扣
+    /// v2流动性可以获得的最大v3流动性数量。对于迁移到的特殊情况
+    /// 超出范围的位置，“amount{0,1}Min”可以设置为 0，强制该位置保持在范围之外
+    /// @param params 迁移 v2 流动性所需的参数，在 calldata 中编码为“MigrateParams”
     function migrate(MigrateParams calldata params) external;
 }

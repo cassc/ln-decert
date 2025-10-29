@@ -4,12 +4,12 @@ pragma solidity >=0.6.0;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 library TransferHelper {
-    /// @notice Transfers tokens from the targeted address to the given destination
-    /// @notice Errors with 'STF' if transfer fails
-    /// @param token The contract address of the token to be transferred
-    /// @param from The originating address from which the tokens will be transferred
-    /// @param to The destination address of the transfer
-    /// @param value The amount to be transferred
+    /// @notice 将代币从目标地址转移到给定目的地
+    /// @notice 如果传输失败，则会出现“STF”错误
+    /// @param token 待转账代币的合约地址
+    /// @param from 代币转账的起始地址
+    /// @param to 传输的目的地址
+    /// @param value 要转账的金额
     function safeTransferFrom(
         address token,
         address from,
@@ -21,11 +21,11 @@ library TransferHelper {
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'STF');
     }
 
-    /// @notice Transfers tokens from msg.sender to a recipient
-    /// @dev Errors with ST if transfer fails
-    /// @param token The contract address of the token which will be transferred
-    /// @param to The recipient of the transfer
-    /// @param value The value of the transfer
+    /// @notice 将令牌从 msg.sender 转移到收件人
+    /// @dev 如果传输失败，ST 会出错
+    /// @param token 将要转账的token合约地址
+    /// @param 至转账接收人
+    /// @param 价值 转移的价值
     function safeTransfer(
         address token,
         address to,
@@ -35,11 +35,11 @@ library TransferHelper {
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'ST');
     }
 
-    /// @notice Approves the stipulated contract to spend the given allowance in the given token
-    /// @dev Errors with 'SA' if transfer fails
-    /// @param token The contract address of the token to be approved
-    /// @param to The target of the approval
-    /// @param value The amount of the given token the target will be allowed to spend
+    /// @notice 批准规定的合同，以给定的代币花费给定的津贴
+    /// @dev 如果传输失败，则会出现“SA”错误
+    /// @param token 待审批token的合约地址
+    /// @param 至 审批目标
+    /// @param value 允许目标花费的给定代币的金额
     function safeApprove(
         address token,
         address to,
@@ -49,10 +49,10 @@ library TransferHelper {
         require(success && (data.length == 0 || abi.decode(data, (bool))), 'SA');
     }
 
-    /// @notice Transfers ETH to the recipient address
-    /// @dev Fails with `STE`
-    /// @param to The destination of the transfer
-    /// @param value The value to be transferred
+    /// @notice 将 ETH 转入收款人地址
+    /// @dev 因“STE”失败
+    /// @param 至 转乘目的地
+    /// @param value 要传输的值
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}(new bytes(0));
         require(success, 'STE');
