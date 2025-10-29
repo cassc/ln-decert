@@ -16,6 +16,7 @@ contract MemeFactoryTest is Test {
     uint256 internal constant PER_MINT = 10_000 ether;
     uint256 internal constant PRICE = 1 ether;
 
+    // 准备新的 Meme 工厂并清空参与者余额
     function setUp() public {
         factory = new MemeFactory(treasury);
         vm.deal(treasury, 0);
@@ -23,6 +24,7 @@ contract MemeFactoryTest is Test {
         vm.deal(buyer, 0);
     }
 
+    // 验证部署出的代币符号和配置与输入一致
     function testDeploySetsSymbolAndConfig() public {
         vm.prank(issuer);
         address tokenAddr = factory.deployMeme("DOGE", TOTAL_SUPPLY, PER_MINT, PRICE);
@@ -40,6 +42,7 @@ contract MemeFactoryTest is Test {
         assertEq(perMintFromFactory, PER_MINT);
     }
 
+    // 检查 mint 行为是否会铸造代币并正确分配费用
     function testMintMemePaysOutAndMints() public {
         vm.prank(issuer);
         address tokenAddr = factory.deployMeme("DOGE", TOTAL_SUPPLY, PER_MINT, PRICE);
@@ -61,6 +64,7 @@ contract MemeFactoryTest is Test {
         assertEq(issuer.balance, expectedIssuerCut);
     }
 
+    // 确保铸造量不会超过上限
     function testMintCannotExceedSupply() public {
         uint256 totalSupply = PER_MINT * 2;
 
