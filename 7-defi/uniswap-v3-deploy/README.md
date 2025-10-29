@@ -161,6 +161,29 @@ flowchart TD
     class Bucket2 active
 ```
 
+## 🔌 用户如何与合约交互
+
+在 Uniswap V3 中，**核心合约（core）负责状态机与资金安全**，而 **周边合约（periphery）提供面向用户与应用的易用接口**。绝大多数 LP 与交易者并不会直接调用 `UniswapV3Pool` 的 `mint`/`burn`/`swap`，而是通过以下“代理层”完成交互：
+
+- **NonfungiblePositionManager（NFT 头寸管理器）**  
+  - 对外暴露 `mint`、`increaseLiquidity`、`decreaseLiquidity`、`collect` 等接口，一次性封装 Tick 计算、流动性金额推导、回调支付和 NFT 记账。  
+  - 在内部借助 `LiquidityManagement.addLiquidity` 计算应当传入池子的 `liquidity`，随后调用 `pool.mint(...)`，并在 `uniswapV3MintCallback` 回调里从用户钱包扣除 token。
+  - 每个 LP 头寸都铸造成 ERC721 NFT，方便授权、转让以及与链上仓位管理工具集成。
+
+- **SwapRouter / UniversalRouter（路由合约）**  
+  - 为交易者根据路径构造多跳调用，统一完成 `exactInputSingle` / `exactOutput` 等逻辑，并在回调中支付 token。
+
+- **周边工具库与 SDK**  
+  - Sol 合约侧：`LiquidityManagement`、`PoolInitializer`、`PeripheryPayments` 等抽象把多步流程拆分成少量安全函数。  
+  - JavaScript/TypeScript 侧：`@uniswap/v3-sdk` 的 `Position`、`NonfungiblePositionManager.addCallParameters` 等方法，帮助前端或服务端在链下算出 tick、流动性、最小滑点，再组装 calldata。
+
+### 直接与核心池交互的场景
+
+- 做市商机器人、MEV 搜寻者或某些协议集成希望完全掌控回调与资金流时，会选择直接调用 `UniswapV3Pool`。  
+- 工具链或安全审计也会在脚本中直接触碰核心合约，以便针对状态变量做精细测试。
+
+无论是否通过周边合约调用，核心池方法始终保持 **权限开放（permissionless）**，但建议常规用户沿用官方提供的 periphery 层，以免遗漏回调支付、滑点校验等复杂细节。
+
 ## 📁 项目结构
 
 ```
@@ -196,7 +219,6 @@ uniswap-v3-deploy/
 │   └── UniswapV3.t.sol             # 完整功能测试
 │
 ├── v3-core/                    # Uniswap V3 核心原始仓库
-├── v3-periphery/               # Uniswap V3 周边原始仓库
 └── foundry.toml                # Foundry 配置
 ```
 
@@ -551,6 +573,28 @@ V3 的 gas 成本比 V2 高，特别是：
 - 可选择的价格精度
 - Gas 成本
 - 流动性碎片化程度
+
+在 Uniswap V3 中，费率等级与 `tickSpacing` 是成对启用的：工厂在调用 `enableFeeAmount(fee, tickSpacing)` 时会同时记录两者，之后所有使用该费率创建的池都必须遵循对应的刻度间距。常见配置如下：
+
+| 费率 (fee) | tickSpacing | 典型场景 |
+|------------|-------------|----------|
+| 0.05% (500) | 10 | 高相关、稳定币对 |
+| 0.30% (3000) | 60 | 普通交易对 |
+| 1.00% (10000) | 200 | 波动性较大的长尾资产 |
+
+之所以要把费率和 `tickSpacing` 绑定，核心原因有三点：
+- **控制价格网格密度**：`tickSpacing` 限制了可初始化的刻度必须满足 `tick % tickSpacing == 0`，可以防止在高波动池里出现过于密集的刻度更新，从而降低 `swap` 时跨 tick 的频率和成本。
+- **约束状态规模**：`TickBitmap` 与 `Tick` 库依赖固定的间距来压缩存储，否则位图会膨胀并拖慢查找速度。通过限定间距，可以保证每个池的刻度数量在 `~ (MAX_TICK - MIN_TICK) / tickSpacing` 范围内可控。
+- **匹配风险与收益**：费率越高代表承担的价格风险越大，协议默认给予更宽的价格区间（更大的 `tickSpacing`），引导 LP 不要在极窄区间集中流动性，以免频繁再平衡。
+
+由于 `TickMath` 的刻度上下限固定在 `[-887_272, 887_272]`，池子初始化或添加全范围流动性时，需要把理论上的最小/最大 tick 按照间距取整。例如 0.30% 费率的池会得到：
+
+```text
+tickLower = floor(-887_272 / 60) * 60 = -887_220
+tickUpper = floor( 887_272 / 60) * 60 =  887_220
+```
+
+因此，在测试或实际调用 `pool.mint()` 时，必须先根据费率对应的 `tickSpacing` 对上下界进行对齐，才能通过合约的校验。
 
 ## 📖 学习资源
 

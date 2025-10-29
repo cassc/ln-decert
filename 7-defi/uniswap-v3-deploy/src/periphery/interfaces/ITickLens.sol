@@ -16,8 +16,8 @@ interface ITickLens {
     /// @param pool 目标池地址
     /// @param tickBitmapIndex 刻度位图中要解析的字索引
     /// @return populatedTicks 给定字内所有已填充刻度的数据数组
-    function getPopulatedTicksInWord(address pool, int16 tickBitmapIndex)
-        external
-        view
-        returns (PopulatedTick[] memory populatedTicks);
+    function getPopulatedTicksInWord(
+        address pool,
+        int16 tickBitmapIndex
+    ) external view returns (PopulatedTick[] memory populatedTicks);
 }

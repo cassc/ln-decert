@@ -2,21 +2,21 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
-import '@uniswap/v3-core/contracts/libraries/FixedPoint128.sol';
-import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@uniswap/v3-core/contracts/libraries/FixedPoint128.sol";
+import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 
-import './interfaces/INonfungiblePositionManager.sol';
-import './interfaces/INonfungibleTokenPositionDescriptor.sol';
-import './libraries/PositionKey.sol';
-import './libraries/PoolAddress.sol';
-import './base/LiquidityManagement.sol';
-import './base/PeripheryImmutableState.sol';
-import './base/Multicall.sol';
-import './base/ERC721Permit.sol';
-import './base/PeripheryValidation.sol';
-import './base/SelfPermit.sol';
-import './base/PoolInitializer.sol';
+import "./interfaces/INonfungiblePositionManager.sol";
+import "./interfaces/INonfungibleTokenPositionDescriptor.sol";
+import "./libraries/PositionKey.sol";
+import "./libraries/PoolAddress.sol";
+import "./base/LiquidityManagement.sol";
+import "./base/PeripheryImmutableState.sol";
+import "./base/Multicall.sol";
+import "./base/ERC721Permit.sol";
+import "./base/PeripheryValidation.sol";
+import "./base/SelfPermit.sol";
+import "./base/PoolInitializer.sol";
 
 /// @title Uniswap V3 非同质化头寸管理器
 /// @notice 将 Uniswap V3 头寸包装在 ERC721 非同质化代币接口中
@@ -72,12 +72,17 @@ contract NonfungiblePositionManager is
         address _factory,
         address _WETH9,
         address _tokenDescriptor_
-    ) ERC721Permit('Uniswap V3 Positions NFT-V1', 'UNI-V3-POS', '1') PeripheryImmutableState(_factory, _WETH9) {
+    )
+        ERC721Permit("Uniswap V3 Positions NFT-V1", "UNI-V3-POS", "1")
+        PeripheryImmutableState(_factory, _WETH9)
+    {
         _tokenDescriptor = _tokenDescriptor_;
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function positions(uint256 tokenId)
+    function positions(
+        uint256 tokenId
+    )
         external
         view
         override
@@ -97,7 +102,7 @@ contract NonfungiblePositionManager is
         )
     {
         Position memory position = _positions[tokenId];
-        require(position.poolId != 0, 'Invalid token ID');
+        require(position.poolId != 0, "Invalid token ID");
         PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
         return (
             position.nonce,
@@ -116,7 +121,10 @@ contract NonfungiblePositionManager is
     }
 
     /// @dev 缓存池密钥
-    function cachePoolKey(address pool, PoolAddress.PoolKey memory poolKey) private returns (uint80 poolId) {
+    function cachePoolKey(
+        address pool,
+        PoolAddress.PoolKey memory poolKey
+    ) private returns (uint80 poolId) {
         poolId = _poolIds[pool];
         if (poolId == 0) {
             _poolIds[pool] = (poolId = _nextPoolId++);
@@ -125,7 +133,9 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function mint(MintParams calldata params)
+    function mint(
+        MintParams calldata params
+    )
         external
         payable
         override
@@ -155,15 +165,28 @@ contract NonfungiblePositionManager is
 
         _mint(params.recipient, (tokenId = _nextId++));
 
-        bytes32 positionKey = PositionKey.compute(address(this), params.tickLower, params.tickUpper);
-        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+        bytes32 positionKey = PositionKey.compute(
+            address(this),
+            params.tickLower,
+            params.tickUpper
+        );
+        (
+            ,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128,
+            ,
+
+        ) = pool.positions(positionKey);
 
         // 幂等设置：若不存在则写入
-        uint80 poolId =
-            cachePoolKey(
-                address(pool),
-                PoolAddress.PoolKey({token0: params.token0, token1: params.token1, fee: params.fee})
-            );
+        uint80 poolId = cachePoolKey(
+            address(pool),
+            PoolAddress.PoolKey({
+                token0: params.token0,
+                token1: params.token1,
+                fee: params.fee
+            })
+        );
 
         _positions[tokenId] = Position({
             nonce: 0,
@@ -182,29 +205,33 @@ contract NonfungiblePositionManager is
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+        require(_isApprovedOrOwner(msg.sender, tokenId), "Not approved");
         _;
     }
 
-    function tokenURI(uint256 tokenId) public view override(ERC721, IERC721Metadata) returns (string memory) {
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721, IERC721Metadata) returns (string memory) {
         require(_exists(tokenId));
-        return INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(this, tokenId);
+        return
+            INonfungibleTokenPositionDescriptor(_tokenDescriptor).tokenURI(
+                this,
+                tokenId
+            );
     }
 
     // 通过删除未使用方法的实现来保存字节码
     function baseURI() public pure override returns (string memory) {}
 
     /// @inheritdoc INonfungiblePositionManager
-    function increaseLiquidity(IncreaseLiquidityParams calldata params)
+    function increaseLiquidity(
+        IncreaseLiquidityParams calldata params
+    )
         external
         payable
         override
         checkDeadline(params.deadline)
-        returns (
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        )
+        returns (uint128 liquidity, uint256 amount0, uint256 amount1)
     {
         Position storage position = _positions[params.tokenId];
 
@@ -226,10 +253,20 @@ contract NonfungiblePositionManager is
             })
         );
 
-        bytes32 positionKey = PositionKey.compute(address(this), position.tickLower, position.tickUpper);
+        bytes32 positionKey = PositionKey.compute(
+            address(this),
+            position.tickLower,
+            position.tickUpper
+        );
 
-    // 已更新至本次交易后的值
-        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+        // 已更新至本次交易后的值
+        (
+            ,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128,
+            ,
+
+        ) = pool.positions(positionKey);
 
         position.tokensOwed0 += uint128(
             FullMath.mulDiv(
@@ -254,7 +291,9 @@ contract NonfungiblePositionManager is
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function decreaseLiquidity(DecreaseLiquidityParams calldata params)
+    function decreaseLiquidity(
+        DecreaseLiquidityParams calldata params
+    )
         external
         payable
         override
@@ -269,20 +308,40 @@ contract NonfungiblePositionManager is
         require(positionLiquidity >= params.liquidity);
 
         PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
-        IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, poolKey));
-        (amount0, amount1) = pool.burn(position.tickLower, position.tickUpper, params.liquidity);
+        IUniswapV3Pool pool = IUniswapV3Pool(
+            PoolAddress.computeAddress(factory, poolKey)
+        );
+        (amount0, amount1) = pool.burn(
+            position.tickLower,
+            position.tickUpper,
+            params.liquidity
+        );
 
-        require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
+        require(
+            amount0 >= params.amount0Min && amount1 >= params.amount1Min,
+            "Price slippage check"
+        );
 
-        bytes32 positionKey = PositionKey.compute(address(this), position.tickLower, position.tickUpper);
-    // 已更新至本次交易后的值
-        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+        bytes32 positionKey = PositionKey.compute(
+            address(this),
+            position.tickLower,
+            position.tickUpper
+        );
+        // 已更新至本次交易后的值
+        (
+            ,
+            uint256 feeGrowthInside0LastX128,
+            uint256 feeGrowthInside1LastX128,
+            ,
+
+        ) = pool.positions(positionKey);
 
         position.tokensOwed0 +=
             uint128(amount0) +
             uint128(
                 FullMath.mulDiv(
-                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
+                    feeGrowthInside0LastX128 -
+                        position.feeGrowthInside0LastX128,
                     positionLiquidity,
                     FixedPoint128.Q128
                 )
@@ -291,7 +350,8 @@ contract NonfungiblePositionManager is
             uint128(amount1) +
             uint128(
                 FullMath.mulDiv(
-                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
+                    feeGrowthInside1LastX128 -
+                        position.feeGrowthInside1LastX128,
                     positionLiquidity,
                     FixedPoint128.Q128
                 )
@@ -299,14 +359,21 @@ contract NonfungiblePositionManager is
 
         position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
         position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
-    // 此处减法安全，因已保证 positionLiquidity ≥ params.liquidity
-    position.liquidity = positionLiquidity - params.liquidity;
+        // 此处减法安全，因已保证 positionLiquidity ≥ params.liquidity
+        position.liquidity = positionLiquidity - params.liquidity;
 
-        emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
+        emit DecreaseLiquidity(
+            params.tokenId,
+            params.liquidity,
+            amount0,
+            amount1
+        );
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function collect(CollectParams calldata params)
+    function collect(
+        CollectParams calldata params
+    )
         external
         payable
         override
@@ -314,33 +381,53 @@ contract NonfungiblePositionManager is
         returns (uint256 amount0, uint256 amount1)
     {
         require(params.amount0Max > 0 || params.amount1Max > 0);
-    // 当接收者为 0 地址时，默认收款到本合约
-    address recipient = params.recipient == address(0) ? address(this) : params.recipient;
+        // 当接收者为 0 地址时，默认收款到本合约
+        address recipient = params.recipient == address(0)
+            ? address(this)
+            : params.recipient;
 
         Position storage position = _positions[params.tokenId];
 
         PoolAddress.PoolKey memory poolKey = _poolIdToPoolKey[position.poolId];
 
-        IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, poolKey));
+        IUniswapV3Pool pool = IUniswapV3Pool(
+            PoolAddress.computeAddress(factory, poolKey)
+        );
 
-        (uint128 tokensOwed0, uint128 tokensOwed1) = (position.tokensOwed0, position.tokensOwed1);
+        (uint128 tokensOwed0, uint128 tokensOwed1) = (
+            position.tokensOwed0,
+            position.tokensOwed1
+        );
 
         // 如果有任何流动性，则触发所欠头寸费用和费用增长快照的更新
         if (position.liquidity > 0) {
             pool.burn(position.tickLower, position.tickUpper, 0);
-            (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) =
-                pool.positions(PositionKey.compute(address(this), position.tickLower, position.tickUpper));
+            (
+                ,
+                uint256 feeGrowthInside0LastX128,
+                uint256 feeGrowthInside1LastX128,
+                ,
+
+            ) = pool.positions(
+                    PositionKey.compute(
+                        address(this),
+                        position.tickLower,
+                        position.tickUpper
+                    )
+                );
 
             tokensOwed0 += uint128(
                 FullMath.mulDiv(
-                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
+                    feeGrowthInside0LastX128 -
+                        position.feeGrowthInside0LastX128,
                     position.liquidity,
                     FixedPoint128.Q128
                 )
             );
             tokensOwed1 += uint128(
                 FullMath.mulDiv(
-                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
+                    feeGrowthInside1LastX128 -
+                        position.feeGrowthInside1LastX128,
                     position.liquidity,
                     FixedPoint128.Q128
                 )
@@ -351,11 +438,10 @@ contract NonfungiblePositionManager is
         }
 
         // 计算提供给 pool#collect 方法的参数
-        (uint128 amount0Collect, uint128 amount1Collect) =
-            (
-                params.amount0Max > tokensOwed0 ? tokensOwed0 : params.amount0Max,
-                params.amount1Max > tokensOwed1 ? tokensOwed1 : params.amount1Max
-            );
+        (uint128 amount0Collect, uint128 amount1Collect) = (
+            params.amount0Max > tokensOwed0 ? tokensOwed0 : params.amount0Max,
+            params.amount1Max > tokensOwed1 ? tokensOwed1 : params.amount1Max
+        );
 
         // 执行收集并返回实际收取的金额
         (amount0, amount1) = pool.collect(
@@ -367,26 +453,43 @@ contract NonfungiblePositionManager is
         );
 
         // 由于核心合约的舍入，实际数额可能略小于预期；此处按预期金额扣减，便于正确销毁欠账
-        (position.tokensOwed0, position.tokensOwed1) = (tokensOwed0 - amount0Collect, tokensOwed1 - amount1Collect);
+        (position.tokensOwed0, position.tokensOwed1) = (
+            tokensOwed0 - amount0Collect,
+            tokensOwed1 - amount1Collect
+        );
 
         emit Collect(params.tokenId, recipient, amount0Collect, amount1Collect);
     }
 
     /// @inheritdoc INonfungiblePositionManager
-    function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
+    function burn(
+        uint256 tokenId
+    ) external payable override isAuthorizedForToken(tokenId) {
         Position storage position = _positions[tokenId];
-        require(position.liquidity == 0 && position.tokensOwed0 == 0 && position.tokensOwed1 == 0, 'Not cleared');
+        require(
+            position.liquidity == 0 &&
+                position.tokensOwed0 == 0 &&
+                position.tokensOwed1 == 0,
+            "Not cleared"
+        );
         delete _positions[tokenId];
         _burn(tokenId);
     }
 
-    function _getAndIncrementNonce(uint256 tokenId) internal override returns (uint256) {
+    function _getAndIncrementNonce(
+        uint256 tokenId
+    ) internal override returns (uint256) {
         return uint256(_positions[tokenId].nonce++);
     }
 
     /// @inheritdoc IERC721
-    function getApproved(uint256 tokenId) public view override(ERC721, IERC721) returns (address) {
-        require(_exists(tokenId), 'ERC721: approved query for nonexistent token');
+    function getApproved(
+        uint256 tokenId
+    ) public view override(ERC721, IERC721) returns (address) {
+        require(
+            _exists(tokenId),
+            "ERC721: approved query for nonexistent token"
+        );
 
         return _positions[tokenId].operator;
     }

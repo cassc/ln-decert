@@ -2,20 +2,22 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
-import '@uniswap/lib/contracts/libraries/SafeERC20Namer.sol';
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@uniswap/lib/contracts/libraries/SafeERC20Namer.sol";
 
-import './libraries/ChainId.sol';
-import './interfaces/INonfungiblePositionManager.sol';
-import './interfaces/INonfungibleTokenPositionDescriptor.sol';
-import './interfaces/IERC20Metadata.sol';
-import './libraries/PoolAddress.sol';
-import './libraries/NFTDescriptor.sol';
-import './libraries/TokenRatioSortOrder.sol';
+import "./libraries/ChainId.sol";
+import "./interfaces/INonfungiblePositionManager.sol";
+import "./interfaces/INonfungibleTokenPositionDescriptor.sol";
+import "./interfaces/IERC20Metadata.sol";
+import "./libraries/PoolAddress.sol";
+import "./libraries/NFTDescriptor.sol";
+import "./libraries/TokenRatioSortOrder.sol";
 
 /// @title NFT 头寸描述器
 /// @notice 生成包含 JSON 元数据的数据 URI 字符串
-contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescriptor {
+contract NonfungibleTokenPositionDescriptor is
+    INonfungibleTokenPositionDescriptor
+{
     address private constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
     address private constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address private constant USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
@@ -45,22 +47,31 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
     }
 
     /// @inheritdoc INonfungibleTokenPositionDescriptor
-    function tokenURI(INonfungiblePositionManager positionManager, uint256 tokenId)
-        external
-        view
-        override
-        returns (string memory)
-    {
-        (, , address token0, address token1, uint24 fee, int24 tickLower, int24 tickUpper, , , , , ) =
-            positionManager.positions(tokenId);
+    function tokenURI(
+        INonfungiblePositionManager positionManager,
+        uint256 tokenId
+    ) external view override returns (string memory) {
+        (
+            ,
+            ,
+            address token0,
+            address token1,
+            uint24 fee,
+            int24 tickLower,
+            int24 tickUpper,
+            ,
+            ,
+            ,
+            ,
 
-        IUniswapV3Pool pool =
-            IUniswapV3Pool(
-                PoolAddress.computeAddress(
-                    positionManager.factory(),
-                    PoolAddress.PoolKey({token0: token0, token1: token1, fee: fee})
-                )
-            );
+        ) = positionManager.positions(tokenId);
+
+        IUniswapV3Pool pool = IUniswapV3Pool(
+            PoolAddress.computeAddress(
+                positionManager.factory(),
+                PoolAddress.PoolKey({token0: token0, token1: token1, fee: fee})
+            )
+        );
 
         bool _flipRatio = flipRatio(token0, token1, ChainId.get());
         address quoteTokenAddress = !_flipRatio ? token1 : token0;
@@ -79,8 +90,10 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
                     baseTokenSymbol: baseTokenAddress == WETH9
                         ? nativeCurrencyLabel()
                         : SafeERC20Namer.tokenSymbol(baseTokenAddress),
-                    quoteTokenDecimals: IERC20Metadata(quoteTokenAddress).decimals(),
-                    baseTokenDecimals: IERC20Metadata(baseTokenAddress).decimals(),
+                    quoteTokenDecimals: IERC20Metadata(quoteTokenAddress)
+                        .decimals(),
+                    baseTokenDecimals: IERC20Metadata(baseTokenAddress)
+                        .decimals(),
                     flipRatio: _flipRatio,
                     tickLower: tickLower,
                     tickUpper: tickUpper,
@@ -97,10 +110,15 @@ contract NonfungibleTokenPositionDescriptor is INonfungibleTokenPositionDescript
         address token1,
         uint256 chainId
     ) public view returns (bool) {
-        return tokenRatioPriority(token0, chainId) > tokenRatioPriority(token1, chainId);
+        return
+            tokenRatioPriority(token0, chainId) >
+            tokenRatioPriority(token1, chainId);
     }
 
-    function tokenRatioPriority(address token, uint256 chainId) public view returns (int256) {
+    function tokenRatioPriority(
+        address token,
+        uint256 chainId
+    ) public view returns (int256) {
         if (token == WETH9) {
             return TokenRatioSortOrder.DENOMINATOR;
         }

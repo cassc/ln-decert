@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
 
-import './TestERC20.sol';
-import '../interfaces/external/IERC20PermitAllowed.sol';
+import "./TestERC20.sol";
+import "../interfaces/external/IERC20PermitAllowed.sol";
 
 // 提供 PermitAllowed 的测试实现：allowed=true 等价授权至 type(uint256).max
 contract TestERC20PermitAllowed is TestERC20, IERC20PermitAllowed {
@@ -18,7 +18,18 @@ contract TestERC20PermitAllowed is TestERC20, IERC20PermitAllowed {
         bytes32 r,
         bytes32 s
     ) external override {
-        require(this.nonces(holder) == nonce, 'TestERC20PermitAllowed::permit: wrong nonce');
-        permit(holder, spender, allowed ? type(uint256).max : 0, expiry, v, r, s);
+        require(
+            this.nonces(holder) == nonce,
+            "TestERC20PermitAllowed::permit: wrong nonce"
+        );
+        permit(
+            holder,
+            spender,
+            allowed ? type(uint256).max : 0,
+            expiry,
+            v,
+            r,
+            s
+        );
     }
 }
