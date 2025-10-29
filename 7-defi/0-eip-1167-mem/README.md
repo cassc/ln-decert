@@ -16,6 +16,31 @@
 3. 买家调用 `mintMeme` 并支付指定价格，工厂会通过克隆合约完成代币铸造。
 4. 交易完成后，工厂自动按比例把款项分给项目方与发行方。
 
+### 流程图示
+
+```mermaid
+sequenceDiagram
+    participant Issuer as 发行方
+    participant Factory as MemeFactory
+    participant Token as MemeToken (Clone)
+    participant Buyer as 买家
+    participant Project as 项目方金库
+
+    Note over Issuer,Factory: 阶段 1: 部署 Meme 代币
+    Issuer->>Factory: deployMeme(symbol, totalSupply, perMint, price)
+    Factory->>Token: clone() + initialize()
+    Factory-->>Factory: 记录 memeInfo
+    Factory-->>Issuer: 返回代币地址
+
+    Note over Buyer,Project: 阶段 2: 铸造 Meme 代币
+    Buyer->>Factory: mintMeme(tokenAddr) {value: price}
+    Factory->>Token: mint(buyer)
+    Token-->>Buyer: 铸造 perMint 数量代币
+    Factory->>Project: 转账 1% 手续费
+    Factory->>Issuer: 转账 99% 给发行方
+    Factory-->>Buyer: 交易完成
+```
+
 ## 参数说明
 - `symbol`：代币符号，字符串不能为空。
 - `totalSupply`：最大可铸数量，必须大于 0。
