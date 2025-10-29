@@ -1,8 +1,8 @@
-# Meme 发射平台
+# Meme 代币工厂
 
 本项目基于 OpenZeppelin 提供的 `Clones` 库，实现 EIP-1167 最小代理模式，让发行方快速部署 Meme ERC20 代币。工程基于 Foundry，核心逻辑如下：
 
-- `MemeFactory`：部署代理实例、记录代币配置，并在铸造时代收 1% 手续费给项目方。
+- `MemeFactory`：部署代理实例、记录代币配置，并在铸造时向买家收取 1% 手续费给项目方。
 - `MemeToken`：可初始化的 ERC20 代币，限制每次铸造数量并校验总量上限。
 
 ## 功能概览
@@ -35,7 +35,7 @@
 
 ## 测试说明
 `test/MemeFactory.t.sol` 覆盖以下场景：
-- 部署后的符号、发行方与配置参数是否正确。
+- 部署后的代币代号、发行方与配置参数是否正确。
 - 买家铸造后代币数量、总计铸造量以及费用分配是否正确。
 - 当铸造会超过 `totalSupply` 时会正确回退。
 
@@ -50,7 +50,7 @@ library Clones {
         assembly ("memory-safe") {
             // 1. mstore：先把实现地址左移 0x60，再右移 0xe8 取出高 3 字节，填进模板中 PUSH20 的前 3 字节占位，写入内存 0x00。
             mstore(0x00, or(shr(0xe8, shl(0x60, implementation)), 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000))
-            // 2.mstore：把剩余 17 字节的实现地址移到高位，和模板尾部 0x5af4...5bf3 组合，写入内存 0x20。
+            // 2. mstore：把剩余 17 字节的实现地址移到高位，和模板尾部 0x5af4...5bf3 组合，写入内存 0x20。
             mstore(0x20, or(shl(0x78, implementation), 0x5af43d82803e903d91602b57fd5bf3))
             // create：从内存偏移 0x09 读取 0x37 字节初始化代码调用 CREATE，并把新地址写入 instance。
             instance := create(value, 0x09, 0x37)
@@ -65,7 +65,7 @@ library Clones {
 
 补充说明：
 - `assembly ("memory-safe")` 告诉编译器我们遵守内存安全约定，避免额外检查。
-- 1. `mstore` 把实现地址的前 3 字节填入模板 `...73 000000` 的占位区。
-- 2. `mstore` 将剩余 17 字节移到高位，与常量 `0x5af4...5bf3` 拼成完整 runtime 代码。
+- 第一个 `mstore` 把实现地址的前 3 字节填入模板 `...73 000000` 的占位区。
+- 第二个 `mstore` 将剩余 17 字节移到高位，与常量 `0x5af4...5bf3` 拼成完整 runtime 代码。
 - `create(value, 0x09, 0x37)` 表示从内存偏移 `0x09` 取 `0x37` 字节喂给 `CREATE`，并附带 `value` ETH。
 - CREATE 返回零地址则意味着部署失败，抛出 `FailedDeployment` 终止执行。
