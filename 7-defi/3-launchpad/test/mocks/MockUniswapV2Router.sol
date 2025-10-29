@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
+import {ERC20} from "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 import {IUniswapV2Router02} from "../../src/interfaces/IUniswapV2Router02.sol";
 
@@ -16,12 +17,22 @@ contract MockUniswapV2Router is IUniswapV2Router02 {
     uint256 public lastLiquidity;
     address public lastLiquidityRecipient;
 
+    LpToken public immutable lpToken;
+    uint256 public tokenReserve;
+    uint256 public ethReserve;
+    uint256 public totalLiquidity;
+
     constructor(address weth_) {
         WETH = weth_;
+        lpToken = new LpToken();
     }
 
     function setTokensPerEth(uint256 newRate) external {
         tokensPerEth = newRate;
+    }
+
+    function lpTokenAddress() external view returns (address) {
+        return address(lpToken);
     }
 
     function addLiquidityETH(
@@ -37,15 +48,29 @@ contract MockUniswapV2Router is IUniswapV2Router02 {
 
         IERC20(token).transferFrom(msg.sender, address(this), amountTokenDesired);
 
+        uint256 prevTokenReserve = tokenReserve;
+        uint256 prevEthReserve = ethReserve;
+
         amountToken = amountTokenDesired;
         amountETH = msg.value;
-        liquidity = amountTokenDesired;
+
+        tokenReserve = prevTokenReserve + amountToken;
+        ethReserve = prevEthReserve + amountETH;
+
+        if (totalLiquidity == 0) {
+            liquidity = _sqrt(amountToken * amountETH);
+        } else {
+            liquidity = (amountETH * totalLiquidity) / prevEthReserve;
+        }
 
         lastLiquidityToken = token;
         lastAmountToken = amountToken;
         lastAmountEth = amountETH;
         lastLiquidity = liquidity;
         lastLiquidityRecipient = to;
+
+        totalLiquidity += liquidity;
+        lpToken.mint(to, liquidity);
     }
 
     function getAmountsOut(
@@ -73,5 +98,23 @@ contract MockUniswapV2Router is IUniswapV2Router02 {
         amounts = new uint256[](2);
         amounts[0] = msg.value;
         amounts[1] = amountOut;
+    }
+
+    function _sqrt(uint256 x) private pure returns (uint256 y) {
+        if (x == 0) return 0;
+        uint256 z = (x + 1) / 2;
+        y = x;
+        while (z < y) {
+            y = z;
+            z = (x / z + z) / 2;
+        }
+    }
+}
+
+contract LpToken is ERC20("Mock LP Token", "MLP") {
+    constructor() {}
+
+    function mint(address to, uint256 amount) external {
+        _mint(to, amount);
     }
 }

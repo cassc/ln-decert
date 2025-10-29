@@ -6,6 +6,7 @@ import "forge-std/Test.sol";
 import {MemeFactory} from "../src/MemeFactory.sol";
 import {MemeToken} from "../src/MemeToken.sol";
 import {MockUniswapV2Router} from "./mocks/MockUniswapV2Router.sol";
+import {IERC20} from "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 
 contract MemeFactoryTest is Test {
     MemeFactory internal factory;
@@ -86,6 +87,9 @@ contract MemeFactoryTest is Test {
         assertEq(router.lastAmountToken(), liquidityShare);
         assertEq(router.lastAmountEth(), PRICE / 20);
         assertEq(router.lastLiquidityRecipient(), treasury);
+
+        uint256 expectedLp = _sqrt(liquidityShare * (PRICE / 20));
+        assertEq(IERC20(router.lpTokenAddress()).balanceOf(treasury), expectedLp);
     }
 
     // 确保铸造量不会超过上限
@@ -148,5 +152,15 @@ contract MemeFactoryTest is Test {
         vm.expectRevert(MemeFactory.PriceNotBetter.selector);
         vm.prank(swapBuyer);
         factory.buyMeme{value: 0.01 ether}(tokenAddr);
+    }
+
+    function _sqrt(uint256 x) internal pure returns (uint256 y) {
+        if (x == 0) return 0;
+        uint256 z = (x + 1) / 2;
+        y = x;
+        while (z < y) {
+            y = z;
+            z = (x / z + z) / 2;
+        }
     }
 }
