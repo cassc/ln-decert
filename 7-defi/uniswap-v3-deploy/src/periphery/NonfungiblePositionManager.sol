@@ -18,8 +18,8 @@ import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
 
-/// 标题 NFT 持仓
-/// @notice 将 Uniswap V3 头寸包装在 ERC721 不可替代代币接口中
+/// @title Uniswap V3 非同质化头寸管理器
+/// @notice 将 Uniswap V3 头寸包装在 ERC721 非同质化代币接口中
 contract NonfungiblePositionManager is
     INonfungiblePositionManager,
     Multicall,
@@ -30,42 +30,42 @@ contract NonfungiblePositionManager is
     PeripheryValidation,
     SelfPermit
 {
-    // 有关 Uniswap 持仓的详细信息
+    // Uniswap 头寸的详细信息
     struct Position {
-        // 许可证的随机数
+        // 许可的 nonce 值
         uint96 nonce;
-        // 批准使用该代币的地址
+        // 被批准可操作该代币的地址
         address operator;
-        // 该令牌所连接的池的 ID
+        // 该代币关联的池 ID
         uint80 poolId;
-        // 持仓变动范围
+        // 头寸价格区间
         int24 tickLower;
         int24 tickUpper;
         // 头寸的流动性
         uint128 liquidity;
-        // 截至单个头寸最后一次操作的总头寸的费用增长
+        // 上次更新时的区间内费用增长值
         uint256 feeGrowthInside0LastX128;
         uint256 feeGrowthInside1LastX128;
-        // 截至上次计算，该位置欠多少未收集的代币
+        // 该头寸应计未提取的代币数量
         uint128 tokensOwed0;
         uint128 tokensOwed1;
     }
 
-    /// @dev 本合约分配的矿池ID
+    /// @dev 本合约分配的池 ID
     mapping(address => uint80) private _poolIds;
 
-    /// @dev 按池 ID 池键，以保存位置数据的 SSTORE
+    /// @dev 池 ID 到池键的映射，用于保存头寸关联的数据
     mapping(uint80 => PoolAddress.PoolKey) private _poolIdToPoolKey;
 
-    /// @dev 代币 ID 位置数据
+    /// @dev 代币 ID 到头寸数据的映射
     mapping(uint256 => Position) private _positions;
 
-    /// @dev 将铸造的下一个代币的 ID。跳过 0
+    /// @dev 下一个待铸造的代币 ID（从 1 开始）
     uint176 private _nextId = 1;
-    /// @dev 下一个第一次使用的池的ID。跳过 0
+    /// @dev 下一个首次使用的池 ID（从 1 开始）
     uint80 private _nextPoolId = 1;
 
-    /// @dev 代币描述符合约的地址，用于处理为位置代币生成代币 URI
+    /// @dev 代币描述合约地址，用于生成头寸代币的 URI
     address private immutable _tokenDescriptor;
 
     constructor(
@@ -158,7 +158,7 @@ contract NonfungiblePositionManager is
         bytes32 positionKey = PositionKey.compute(address(this), params.tickLower, params.tickUpper);
         (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
 
-        // 幂等集
+        // 幂等设置：若不存在则写入
         uint80 poolId =
             cachePoolKey(
                 address(pool),
@@ -228,7 +228,7 @@ contract NonfungiblePositionManager is
 
         bytes32 positionKey = PositionKey.compute(address(this), position.tickLower, position.tickUpper);
 
-        // 现在已更新为当前交易
+    // 已更新至本次交易后的值
         (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
 
         position.tokensOwed0 += uint128(
@@ -275,7 +275,7 @@ contract NonfungiblePositionManager is
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
 
         bytes32 positionKey = PositionKey.compute(address(this), position.tickLower, position.tickUpper);
-        // 现在已更新为当前交易
+    // 已更新至本次交易后的值
         (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
 
         position.tokensOwed0 +=
@@ -299,8 +299,8 @@ contract NonfungiblePositionManager is
 
         position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
         position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
-        // 减法是安全的，因为我们检查了positionLiquidity是gte params.liquidity
-        position.liquidity = positionLiquidity - params.liquidity;
+    // 此处减法安全，因已保证 positionLiquidity ≥ params.liquidity
+    position.liquidity = positionLiquidity - params.liquidity;
 
         emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
     }
@@ -314,8 +314,8 @@ contract NonfungiblePositionManager is
         returns (uint256 amount0, uint256 amount1)
     {
         require(params.amount0Max > 0 || params.amount1Max > 0);
-        // 允许收集到地址为 0 的 nft 仓位管理器地址
-        address recipient = params.recipient == address(0) ? address(this) : params.recipient;
+    // 当接收者为 0 地址时，默认收款到本合约
+    address recipient = params.recipient == address(0) ? address(this) : params.recipient;
 
         Position storage position = _positions[params.tokenId];
 
@@ -357,7 +357,7 @@ contract NonfungiblePositionManager is
                 params.amount1Max > tokensOwed1 ? tokensOwed1 : params.amount1Max
             );
 
-        // 退还实际收取的金额
+        // 执行收集并返回实际收取的金额
         (amount0, amount1) = pool.collect(
             recipient,
             position.tickLower,
@@ -366,8 +366,7 @@ contract NonfungiblePositionManager is
             amount1Collect
         );
 
-        // 有时，由于核心四舍五入，wei 会比预期少一些，但我们只需减去预期的全部金额
-        // 而不是实际金额，这样我们就可以销毁代币
+        // 由于核心合约的舍入，实际数额可能略小于预期；此处按预期金额扣减，便于正确销毁欠账
         (position.tokensOwed0, position.tokensOwed1) = (tokensOwed0 - amount0Collect, tokensOwed1 - amount1Collect);
 
         emit Collect(params.tokenId, recipient, amount0Collect, amount1Collect);
@@ -392,7 +391,7 @@ contract NonfungiblePositionManager is
         return _positions[tokenId].operator;
     }
 
-    /// @dev 覆盖 _approve 以在位置中使用运算符，该位置包含位置允许随机数
+    /// @dev 覆盖 _approve，将运算符记录到 Position 中（与许可的 nonce 一致）
     function _approve(address to, uint256 tokenId) internal override(ERC721) {
         _positions[tokenId].operator = to;
         emit Approval(ownerOf(tokenId), to, tokenId);

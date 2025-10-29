@@ -5,7 +5,7 @@ pragma abicoder v2;
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import '../lens/TickLens.sol';
 
-/// 标题 勾选镜头合同
+/// @title TickLens 测试合约
 contract TickLensTest is TickLens {
     function getGasCostOfGetPopulatedTicksInWord(address pool, int16 tickBitmapIndex) external view returns (uint256) {
         uint256 gasBefore = gasleft();

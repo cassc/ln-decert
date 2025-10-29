@@ -6,7 +6,7 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 
 import '../interfaces/ITickLens.sol';
 
-/// 标题 勾选镜头合同
+/// @title TickLens 合约
 contract TickLens is ITickLens {
     /// @inheritdoc ITickLens
     function getPopulatedTicksInWord(address pool, int16 tickBitmapIndex)
@@ -15,16 +15,16 @@ contract TickLens is ITickLens {
         override
         returns (PopulatedTick[] memory populatedTicks)
     {
-        // 获取位图
+        // 获取位图字
         uint256 bitmap = IUniswapV3Pool(pool).tickBitmap(tickBitmapIndex);
 
-        // 计算填充的刻度数
+        // 统计已填充的刻度数量
         uint256 numberOfPopulatedTicks;
         for (uint256 i = 0; i < 256; i++) {
             if (bitmap & (1 << i) > 0) numberOfPopulatedTicks++;
         }
 
-        // 获取填充的刻度数据
+        // 获取已填充的刻度数据
         int24 tickSpacing = IUniswapV3Pool(pool).tickSpacing();
         populatedTicks = new PopulatedTick[](numberOfPopulatedTicks);
         for (uint256 i = 0; i < 256; i++) {

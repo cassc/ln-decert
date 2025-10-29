@@ -2,10 +2,9 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-/// 标题 勾选镜头
-/// @notice 提供为池获取刻度数据块的函数
-/// @dev 这避免了获取刻度位图、解析位图以了解要获取哪些刻度以及
-/// 然后发送额外的多重调用来获取刻度数据
+/// @title TickLens 接口
+/// @notice 提供针对某个池按字获取刻度数据块的函数
+/// @dev 避免外部先获取位图、再解析决定要拿哪些刻度、再发多次调用的流程
 interface ITickLens {
     struct PopulatedTick {
         int24 tick;
@@ -13,11 +12,10 @@ interface ITickLens {
         uint128 liquidityGross;
     }
 
-    /// @notice 从池的刻度位图的一个字中获取已填充刻度的所有刻度数据
-    /// 参数 pool 要获取填充的刻度数据的池的地址
-    /// 参数 ticketBitmapIndex 刻度位图中要解析位图的单词的索引
-    /// 获取所有已填充的刻度
-    /// 返回 populatedTicks 刻度位图中给定字的刻度数据数组
+    /// @notice 从某池的刻度位图的一个字中获取所有已填充刻度的数据
+    /// @param pool 目标池地址
+    /// @param tickBitmapIndex 刻度位图中要解析的字索引
+    /// @return populatedTicks 给定字内所有已填充刻度的数据数组
     function getPopulatedTicksInWord(address pool, int16 tickBitmapIndex)
         external
         view

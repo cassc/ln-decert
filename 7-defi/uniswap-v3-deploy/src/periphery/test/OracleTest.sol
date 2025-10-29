@@ -22,7 +22,7 @@ contract OracleTest {
         quoteAmount = OracleLibrary.getQuoteAtTick(tick, baseAmount, baseToken, quoteToken);
     }
 
-    // 用于气体快照测试
+    // 用于 gas 快照测试
     function getGasCostOfConsult(address pool, uint32 period) public view returns (uint256) {
         uint256 gasBefore = gasleft();
         OracleLibrary.consult(pool, period);
@@ -61,7 +61,7 @@ contract OracleTest {
         return OracleLibrary.getWeightedArithmeticMeanTick(observations);
     }
 
-    function getChainedPrice(address[] memory tokens, int24[] memory ticks) public view returns (int256 syntheticTick) {
+    function getChainedPrice(address[] memory tokens, int24[] memory ticks) public pure returns (int256 syntheticTick) {
         return OracleLibrary.getChainedPrice(tokens, ticks);
     }
 }
