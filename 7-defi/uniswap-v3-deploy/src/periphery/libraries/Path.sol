@@ -3,7 +3,7 @@ pragma solidity >=0.6.0;
 
 import './BytesLib.sol';
 
-/// @title 用于操作多跳交换的路径数据的函数
+/// 标题 用于操作多跳交换的路径数据的函数
 library Path {
     using BytesLib for bytes;
 
@@ -20,25 +20,25 @@ library Path {
     uint256 private constant MULTIPLE_POOLS_MIN_LENGTH = POP_OFFSET + NEXT_OFFSET;
 
     /// @notice 当且仅当路径包含两个或多个池时返回 true
-    /// @param path 编码的交换路径
-    /// @return 如果路径包含两个或多个池，则为 true，否则为 false
+    /// 参数 path 编码的交换路径
+    /// 返回 如果路径包含两个或多个池，则为 true，否则为 false
     function hasMultiplePools(bytes memory path) internal pure returns (bool) {
         return path.length >= MULTIPLE_POOLS_MIN_LENGTH;
     }
 
     /// @notice 返回路径中池的数量
-    /// @param path 编码的交换路径
-    /// @return 路径中池的数量
+    /// 参数 path 编码的交换路径
+    /// 返回 路径中池的数量
     function numPools(bytes memory path) internal pure returns (uint256) {
         // 忽略第一个令牌地址。从那时起，每笔费用和代币抵消都表示一个池。
         return ((path.length - ADDR_SIZE) / NEXT_OFFSET);
     }
 
     /// @notice 解码路径中的第一个池
-    /// @param path 字节编码的交换路径
-    /// @return tokenA 给定池中的第一个令牌
-    /// @return tokenB 给定池中的第二个令牌
-    /// @return Fee 矿池的费用水平
+    /// 参数 path 字节编码的交换路径
+    /// 返回 tokenA 给定池中的第一个令牌
+    /// 返回 tokenB 给定池中的第二个令牌
+    /// 返回 Fee 矿池的费用水平
     function decodeFirstPool(bytes memory path)
         internal
         pure
@@ -54,15 +54,15 @@ library Path {
     }
 
     /// @notice 获取路径中第一个池对应的段
-    /// @param path 字节编码的交换路径
-    /// @return 包含定位路径中第一个池所需的所有数据的段
+    /// 参数 path 字节编码的交换路径
+    /// 返回 包含定位路径中第一个池所需的所有数据的段
     function getFirstPool(bytes memory path) internal pure returns (bytes memory) {
         return path.slice(0, POP_OFFSET);
     }
 
     /// @notice 从缓冲区中跳过令牌 + 费用元素并返回余数
-    /// @param 路径 交换路径
-    /// @return 路径中剩余的token+费用元素
+    /// 参数 路径 交换路径
+    /// 返回 路径中剩余的token+费用元素
     function skipToken(bytes memory path) internal pure returns (bytes memory) {
         return path.slice(NEXT_OFFSET, path.length - NEXT_OFFSET);
     }

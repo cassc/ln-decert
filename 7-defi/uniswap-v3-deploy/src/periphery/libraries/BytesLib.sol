@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * @title Solidity 字节数组实用程序
+ * 标题 Solidity 字节数组实用程序
  * @作者 Gonçalo Sá <goncalo.sa@consensys.net>
  *
  * @dev 用 Solidity 编写的用于以太坊合约的字节紧密封装的数组实用程序库。

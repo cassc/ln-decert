@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import '../interfaces/IMulticall.sol';
 
-/// @title 多路通话
+/// 标题 多路通话
 /// @notice 允许在一次调用合约中调用多个方法
 abstract contract Multicall is IMulticall {
     /// @inheritdoc IMulticall

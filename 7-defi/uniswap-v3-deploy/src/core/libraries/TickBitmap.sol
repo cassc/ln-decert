@@ -3,23 +3,23 @@ pragma solidity >=0.5.0;
 
 import './BitMath.sol';
 
-/// @title 打包蜱初始化状态库
+/// 标题 打包蜱初始化状态库
 /// @notice 将刻度索引的打包映射存储到其初始化状态
 /// @dev 该映射使用 int16 作为键，因为刻度表示为 int24 并且每个单词有 256 (2^8) 个值。
 library TickBitmap {
     /// @notice 计算映射中刻度的初始化位所在的位置
-    /// @param 刻度 计算位置的刻度
-    /// @return wordPos 映射中包含存储位的字的键
-    /// @return bitPos 存储标志的字中的位位置
+    /// 参数 刻度 计算位置的刻度
+    /// 返回 wordPos 映射中包含存储位的字的键
+    /// 返回 bitPos 存储标志的字中的位位置
     function position(int24 tick) private pure returns (int16 wordPos, uint8 bitPos) {
         wordPos = int16(tick >> 8);
         bitPos = uint8(tick % 256);
     }
 
     /// @notice 将给定刻度的初始化状态从 false 翻转为 true，反之亦然
-    /// @param self 翻转刻度的映射
-    /// @param 勾选 要翻转的勾选
-    /// @param tickSpacing 可用刻度之间的间距
+    /// 参数 self 翻转刻度的映射
+    /// 参数 勾选 要翻转的勾选
+    /// 参数 tickSpacing 可用刻度之间的间距
     function flipTick(
         mapping(int16 => uint256) storage self,
         int24 tick,
@@ -33,12 +33,12 @@ library TickBitmap {
 
     /// @notice 返回与以下任一刻度相同的单词（或相邻单词）中包含的下一个初始化刻度
     /// 给定刻度的左侧（小于或等于）或右侧（大于）
-    /// @param self 用于计算下一个初始化刻度的映射
-    /// @param 刻度线 起始刻度线
-    /// @param tickSpacing 可用刻度之间的间距
-    /// @param lte 是否搜索左侧下一个初始化的刻度（小于或等于起始刻度）
-    /// @return next 距当前刻度最多 256 个刻度的下一个已初始化或未初始化刻度
-    /// @return 是否初始化下一个刻度，因为该函数仅在最多 256 个刻度内搜索
+    /// 参数 self 用于计算下一个初始化刻度的映射
+    /// 参数 刻度线 起始刻度线
+    /// 参数 tickSpacing 可用刻度之间的间距
+    /// 参数 lte 是否搜索左侧下一个初始化的刻度（小于或等于起始刻度）
+    /// 返回 next 距当前刻度最多 256 个刻度的下一个已初始化或未初始化刻度
+    /// 返回 是否初始化下一个刻度，因为该函数仅在最多 256 个刻度内搜索
     function nextInitializedTickWithinOneWord(
         mapping(int16 => uint256) storage self,
         int24 tick,

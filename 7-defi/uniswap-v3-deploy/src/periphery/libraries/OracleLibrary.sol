@@ -5,14 +5,14 @@ import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 
-/// @title 甲骨文库
+/// 标题 甲骨文库
 /// @notice 提供与V3池oracle集成的功能
 library OracleLibrary {
     /// @notice 计算给定 Uniswap V3 池的时间加权平均值和流动性
-    /// @param pool 我们要观察的池的地址
-    /// @param timesAgo 计算时间加权平均值的过去秒数
-    /// @return mathMeanTick 从 (block.timestamp - SecondsAgo) 到 block.timestamp 的算术平均刻度
-    /// @return HarmonicMeanLiquidity 从 (block.timestamp - SecondsAgo) 到 block.timestamp 的调和平均流动性
+    /// 参数 pool 我们要观察的池的地址
+    /// 参数 timesAgo 计算时间加权平均值的过去秒数
+    /// 返回 mathMeanTick 从 (block.timestamp - SecondsAgo) 到 block.timestamp 的算术平均刻度
+    /// 返回 HarmonicMeanLiquidity 从 (block.timestamp - SecondsAgo) 到 block.timestamp 的调和平均流动性
     function consult(address pool, uint32 secondsAgo)
         internal
         view
@@ -41,11 +41,11 @@ library OracleLibrary {
     }
 
     /// @notice 给定一个刻度和一个代币数量，计算在交换中收到的代币数量
-    /// @param 刻度 用于计算报价的刻度值
-    /// @param baseAmount 要转换的代币数量
-    /// @param 用作基本金额面额的 ERC20 代币合约的 baseToken 地址
-    /// @param quoteToken 用作 quoteAmount 面额的 ERC20 代币合约的地址
-    /// @return quoteAmount 收到的 quoteToken 数量，用于 baseAmount of baseToken
+    /// 参数 刻度 用于计算报价的刻度值
+    /// 参数 baseAmount 要转换的代币数量
+    /// 参数 用作基本金额面额的 ERC20 代币合约的 baseToken 地址
+    /// 参数 quoteToken 用作 quoteAmount 面额的 ERC20 代币合约的地址
+    /// 返回 quoteAmount 收到的 quoteToken 数量，用于 baseAmount of baseToken
     function getQuoteAtTick(
         int24 tick,
         uint128 baseAmount,
@@ -69,8 +69,8 @@ library OracleLibrary {
     }
 
     /// @notice 给定一个池，它返回最早存储的观察值之前的秒数
-    /// @param pool 我们想要观察的Uniswap V3池的地址
-    /// @return timesAgo 为池存储的最旧观察的秒数
+    /// 参数 pool 我们想要观察的Uniswap V3池的地址
+    /// 返回 timesAgo 为池存储的最旧观察的秒数
     function getOldestObservationSecondsAgo(address pool) internal view returns (uint32 secondsAgo) {
         (, , uint16 observationIndex, uint16 observationCardinality, , , ) = IUniswapV3Pool(pool).slot0();
         require(observationCardinality > 0, 'NI');
@@ -88,8 +88,8 @@ library OracleLibrary {
     }
 
     /// @notice 给定一个池，它返回当前块开始时的刻度值
-    /// @param Uniswap V3 矿池地址
-    /// @return 当前块开始时池所在的刻度
+    /// 参数 Uniswap V3 矿池地址
+    /// 返回 当前块开始时池所在的刻度
     function getBlockStartingTickAndLiquidity(address pool) internal view returns (int24, uint128) {
         (, int24 tick, uint16 observationIndex, uint16 observationCardinality, , , ) = IUniswapV3Pool(pool).slot0();
 
@@ -132,8 +132,8 @@ library OracleLibrary {
     }
 
     /// @notice 给定一系列刻度和权重，计算加权算术平均刻度
-    /// @param WeightedTickData 价格变动和权重的数组
-    /// @return WeightedArithmeticMeanTick 加权算术平均刻度
+    /// 参数 WeightedTickData 价格变动和权重的数组
+    /// 返回 WeightedArithmeticMeanTick 加权算术平均刻度
     /// @dev “weightedTickData”的每个条目应代表具有相同基础池代币的池中的报价。如果他们不这样做，
     /// 必须格外小心，以确保报价具有可比性（包括小数差异）。
     /// @dev 请注意，加权算术平均价格变动对应于加权几何平均价格。
@@ -162,9 +162,9 @@ library OracleLibrary {
     /// @notice 返回“合成”刻度，代表“tokens”中第一个条目相对于最后一个条目的价格
     /// @dev 对于计算沿线的相对价格很有用。
     /// @dev 每对标记集必须有一个刻度。
-    /// @param tokens 代币合约地址
-    /// @param 刻度线 刻度线，代表“tokens”中每个代币对的价格
-    /// @return SynthesisTick 合成价格变动，代表“tokens”中最外层代币的相对价格
+    /// 参数 tokens 代币合约地址
+    /// 参数 刻度线 刻度线，代表“tokens”中每个代币对的价格
+    /// 返回 SynthesisTick 合成价格变动，代表“tokens”中最外层代币的相对价格
     function getChainedPrice(address[] memory tokens, int24[] memory ticks)
         internal
         pure

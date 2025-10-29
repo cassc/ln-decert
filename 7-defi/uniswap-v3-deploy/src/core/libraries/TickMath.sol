@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0 <0.8.0;
 
-/// @title 用于根据价格变动计算 sqrt 价格的数学库，反之亦然
+/// 标题 用于根据价格变动计算 sqrt 价格的数学库，反之亦然
 /// @notice 计算大小为 1.0001 的刻度的 sqrt 价格，即 sqrt(1.0001^tick) 作为定点 Q64.96 数字。支持
 /// 价格在 2**-128 和 2**128 之间
 library TickMath {
@@ -17,8 +17,8 @@ library TickMath {
 
     /// @notice 计算 sqrt(1.0001^tick) * 2^96
     /// @dev 如果 |tick| 则抛出异常> 最大刻度
-    /// @param 勾选 上述公式的输入勾选
-    /// @return sqrtPriceX96 一个定点 Q64.96 数字，表示两种资产 (token1/token0) 比率的 sqrt
+    /// 参数 勾选 上述公式的输入勾选
+    /// 返回 sqrtPriceX96 一个定点 Q64.96 数字，表示两种资产 (token1/token0) 比率的 sqrt
     /// 在给定的刻度处
     function getSqrtRatioAtTick(int24 tick) internal pure returns (uint160 sqrtPriceX96) {
         uint256 absTick = tick < 0 ? uint256(-int256(tick)) : uint256(int256(tick));
@@ -56,8 +56,8 @@ library TickMath {
     /// @notice 计算最大刻度值，使得 getRatioAtTick(tick) <=ratio
     /// @dev 如果 sqrtPriceX96 < MIN_SQRT_RATIO，则抛出异常，因为 MIN_SQRT_RATIO 是 getRatioAtTick 可能的最小值
     /// 永远回来。
-    /// @param sqrtPriceX96 将报价计算为 Q64.96 的 sqrt 比率
-    /// @return 刻度 比率小于或等于输入比率的最大刻度
+    /// 参数 sqrtPriceX96 将报价计算为 Q64.96 的 sqrt 比率
+    /// 返回 刻度 比率小于或等于输入比率的最大刻度
     function getTickAtSqrtRatio(uint160 sqrtPriceX96) internal pure returns (int24 tick) {
         // 第二个不等式必须 < 因为价格永远无法达到最大报价时的价格
         require(sqrtPriceX96 >= MIN_SQRT_RATIO && sqrtPriceX96 < MAX_SQRT_RATIO, 'R');

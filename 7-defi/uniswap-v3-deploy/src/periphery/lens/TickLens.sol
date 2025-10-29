@@ -6,7 +6,7 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 
 import '../interfaces/ITickLens.sol';
 
-/// @title 勾选镜头合同
+/// 标题 勾选镜头合同
 contract TickLens is ITickLens {
     /// @inheritdoc ITickLens
     function getPopulatedTicksInWord(address pool, int16 tickBitmapIndex)

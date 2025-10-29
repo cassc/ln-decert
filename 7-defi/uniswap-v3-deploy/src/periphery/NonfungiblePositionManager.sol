@@ -18,7 +18,7 @@ import './base/PeripheryValidation.sol';
 import './base/SelfPermit.sol';
 import './base/PoolInitializer.sol';
 
-/// @title NFT 持仓
+/// 标题 NFT 持仓
 /// @notice 将 Uniswap V3 头寸包装在 ERC721 不可替代代币接口中
 contract NonfungiblePositionManager is
     INonfungiblePositionManager,

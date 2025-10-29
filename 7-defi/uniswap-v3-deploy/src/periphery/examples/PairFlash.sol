@@ -12,7 +12,7 @@ import '../libraries/CallbackValidation.sol';
 import '../libraries/TransferHelper.sol';
 import '../interfaces/ISwapRouter.sol';
 
-/// @title Flash合约实施
+/// 标题 Flash合约实施
 /// @notice 使用 Uniswap V3 flash 功能的示例合约
 contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
     using LowGasSafeMath for uint256;
@@ -38,9 +38,9 @@ contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
         uint24 poolFee3;
     }
 
-    /// @param Fee0 调用flash获取token0的费用
-    /// @param Fee1 调用flash获取token1的费用
-    /// @param data 回调中所需的数据作为 FlashCallbackData 从 `initFlash` 传递
+    /// 参数 Fee0 调用flash获取token0的费用
+    /// 参数 Fee1 调用flash获取token1的费用
+    /// 参数 data 回调中所需的数据作为 FlashCallbackData 从 `initFlash` 传递
     /// @notice 实现从 flash 调用的回调
     /// @dev 如果闪存无法盈利，则失败，这意味着闪存中的 amountOut 小于借入的金额
     function uniswapV3FlashCallback(
@@ -119,7 +119,7 @@ contract PairFlash is IUniswapV3FlashCallback, PeripheryPayments {
         uint24 fee3;
     }
 
-    /// @param params flash 和回调所需的参数，以 FlashParams 形式传入
+    /// 参数 params flash 和回调所需的参数，以 FlashParams 形式传入
     /// @notice 使用“uniswapV3FlashCallback”中所需的数据调用池闪存函数
     function initFlash(FlashParams memory params) external {
         PoolAddress.PoolKey memory poolKey =

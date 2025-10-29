@@ -4,20 +4,20 @@ pragma solidity >=0.5.0;
 import './FullMath.sol';
 import './SqrtPriceMath.sol';
 
-/// @title 计算报价内交换的结果
+/// 标题 计算报价内交换的结果
 /// @notice 包含计算单个报价价格范围（即单个报价）内掉期结果的方法。
 library SwapMath {
     /// @notice 给定交换参数，计算交换一定金额或交换一定金额的结果
     /// @dev 如果掉期的“amountSpecified”为正，则费用加上金额永远不会超过剩余金额
-    /// @param sqrtRatioCurrentX96 池的当前 sqrt 价格
-    /// @param sqrtRatioTargetX96 不能超过的价格，从中推断掉期的方向
-    /// @param 流动性 可用流动性
-    /// @param amountRemaining 剩余多少输入或输出金额需要换入/换出
-    /// @param FeePips 从输入金额中获取的费用，以百分之一 BIP 表示
-    /// @return sqrtRatioNextX96 金额转入/转出后的价格，不超过目标价格
-    /// @return amountIn 根据交换方向，token0 或 token1 的交换金额
-    /// @return amountOut 根据交换方向接收 token0 或 token1 的金额
-    /// @return FeeAmount 将作为费用的输入金额
+    /// 参数 sqrtRatioCurrentX96 池的当前 sqrt 价格
+    /// 参数 sqrtRatioTargetX96 不能超过的价格，从中推断掉期的方向
+    /// 参数 流动性 可用流动性
+    /// 参数 amountRemaining 剩余多少输入或输出金额需要换入/换出
+    /// 参数 FeePips 从输入金额中获取的费用，以百分之一 BIP 表示
+    /// 返回 sqrtRatioNextX96 金额转入/转出后的价格，不超过目标价格
+    /// 返回 amountIn 根据交换方向，token0 或 token1 的交换金额
+    /// 返回 amountOut 根据交换方向接收 token0 或 token1 的金额
+    /// 返回 FeeAmount 将作为费用的输入金额
     function computeSwapStep(
         uint160 sqrtRatioCurrentX96,
         uint160 sqrtRatioTargetX96,

@@ -45,10 +45,10 @@ abstract contract PeripheryPayments is IPeripheryPayments, PeripheryImmutableSta
         if (address(this).balance > 0) TransferHelper.safeTransferETH(msg.sender, address(this).balance);
     }
 
-    /// @param token 支付的token
-    /// @param 付款人 必须付款的实体
-    /// @param 接收者 将接收付款的实体
-    /// @param value 支付的金额
+    /// 参数 token 支付的token
+    /// 参数 付款人 必须付款的实体
+    /// 参数 接收者 将接收付款的实体
+    /// 参数 value 支付的金额
     function pay(
         address token,
         address payer,

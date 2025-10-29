@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import "@uniswap/v3-core/contracts/UniswapV3Pool.sol";
 
 /**
- * @title 计算 InitCodeHash
+ * 标题 计算 InitCodeHash
  * @notice 计算 UniswapV3Pool 的 init code hash
  * @dev 该哈希值用于 CREATE2 地址预计算
  *

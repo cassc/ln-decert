@@ -8,7 +8,7 @@ import './NoDelegateCall.sol';
 
 import './UniswapV3Pool.sol';
 
-/// @title Canonical Uniswap V3 工厂
+/// 标题 Canonical Uniswap V3 工厂
 /// @notice 部署 Uniswap V3 矿池并管理矿池协议费用的所有权和控制权
 contract UniswapV3Factory is IUniswapV3Factory, UniswapV3PoolDeployer, NoDelegateCall {
     /// @inheritdoc IUniswapV3Factory

@@ -7,7 +7,7 @@ import './SafeCast.sol';
 import './TickMath.sol';
 import './LiquidityMath.sol';
 
-/// @title 打钩
+/// 标题 打钩
 /// @notice 包含管理报价流程和相关计算的函数
 library Tick {
     using LowGasSafeMath for int256;
@@ -38,9 +38,9 @@ library Tick {
 
     /// @notice 从给定的价格变动间隔得出每个价格变动的最大流动性
     /// @dev 在池构造函数中执行
-    /// @param tickSpacing 所需的刻度间隔量，以 `tickSpacing` 的倍数实现
+    /// 参数 tickSpacing 所需的刻度间隔量，以 `tickSpacing` 的倍数实现
     ///     例如，tickSpacing 为 3 要求每第 3 个刻度初始化刻度，即 ..., -6, -3, 0, 3, 6, ...
-    /// @return 每个价格变动的最大流动性
+    /// 返回 每个价格变动的最大流动性
     function tickSpacingToMaxLiquidityPerTick(int24 tickSpacing) internal pure returns (uint128) {
         int24 minTick = (TickMath.MIN_TICK / tickSpacing) * tickSpacing;
         int24 maxTick = (TickMath.MAX_TICK / tickSpacing) * tickSpacing;
@@ -49,14 +49,14 @@ library Tick {
     }
 
     /// @notice 检索费用增长数据
-    /// @param self 包含初始化刻度的所有刻度信息的映射
-    /// @param tickLower 仓位的下刻度线边界
-    /// @param tickUpper 仓位的上刻度线边界
-    /// @param 当前刻度 当前刻度
-    /// @param FeeGrowthGlobal0X128 每单位流动性的历史全球费用增长（以 token0 为单位）
-    /// @param FeeGrowthGlobal1X128 历史上每单位流动性的全球费用增长（以 token1 为单位）
-    /// @return FeeGrowthInside0X128 在头寸的报价范围内，每单位流动性的 token0 的历史费用增长
-    /// @return FeeGrowthInside1X128 持仓变动范围内每单位流动性的代币 1 的历史费用增长
+    /// 参数 self 包含初始化刻度的所有刻度信息的映射
+    /// 参数 tickLower 仓位的下刻度线边界
+    /// 参数 tickUpper 仓位的上刻度线边界
+    /// 参数 当前刻度 当前刻度
+    /// 参数 FeeGrowthGlobal0X128 每单位流动性的历史全球费用增长（以 token0 为单位）
+    /// 参数 FeeGrowthGlobal1X128 历史上每单位流动性的全球费用增长（以 token1 为单位）
+    /// 返回 FeeGrowthInside0X128 在头寸的报价范围内，每单位流动性的 token0 的历史费用增长
+    /// 返回 FeeGrowthInside1X128 持仓变动范围内每单位流动性的代币 1 的历史费用增长
     function getFeeGrowthInside(
         mapping(int24 => Tick.Info) storage self,
         int24 tickLower,
@@ -95,18 +95,18 @@ library Tick {
     }
 
     /// @notice 更新刻度并在刻度从初始化翻转为未初始化时返回 true，反之亦然
-    /// @param self 包含初始化刻度的所有刻度信息的映射
-    /// @param 勾选 将要更新的勾选
-    /// @param 当前刻度 当前刻度
-    /// @param LiquidityDelta 当从左到右（从右到左）划过刻度线时要添加（减去）的新流动性数量
-    /// @param FeeGrowthGlobal0X128 每单位流动性的历史全球费用增长（以 token0 为单位）
-    /// @param FeeGrowthGlobal1X128 历史上每单位流动性的全球费用增长（以 token1 为单位）
-    /// @param SecondsPerLiquidityCumulativeX128 池中每个 max(1, 流动性) 的所有时间秒数
-    /// @param tickCumulative 自池首次初始化以来经过的tick * 时间
-    /// @param time 当前块时间戳转换为 uint32
-    /// @param upper true 用于更新仓位的上刻度线，或 false 用于更新仓位的下刻度线
-    /// @param maxLiquidity 单笔报价的最大流动性分配
-    /// @return Flipped 是否将刻度从已初始化翻转为未初始化，反之亦然
+    /// 参数 self 包含初始化刻度的所有刻度信息的映射
+    /// 参数 勾选 将要更新的勾选
+    /// 参数 当前刻度 当前刻度
+    /// 参数 LiquidityDelta 当从左到右（从右到左）划过刻度线时要添加（减去）的新流动性数量
+    /// 参数 FeeGrowthGlobal0X128 每单位流动性的历史全球费用增长（以 token0 为单位）
+    /// 参数 FeeGrowthGlobal1X128 历史上每单位流动性的全球费用增长（以 token1 为单位）
+    /// 参数 SecondsPerLiquidityCumulativeX128 池中每个 max(1, 流动性) 的所有时间秒数
+    /// 参数 tickCumulative 自池首次初始化以来经过的tick * 时间
+    /// 参数 time 当前块时间戳转换为 uint32
+    /// 参数 upper true 用于更新仓位的上刻度线，或 false 用于更新仓位的下刻度线
+    /// 参数 maxLiquidity 单笔报价的最大流动性分配
+    /// 返回 Flipped 是否将刻度从已初始化翻转为未初始化，反之亦然
     function update(
         mapping(int24 => Tick.Info) storage self,
         int24 tick,
@@ -150,21 +150,21 @@ library Tick {
     }
 
     /// @notice 清除刻度数据
-    /// @param self 包含初始化刻度的所有初始化刻度信息的映射
-    /// @param 勾选 将被清除的勾选
+    /// 参数 self 包含初始化刻度的所有初始化刻度信息的映射
+    /// 参数 勾选 将被清除的勾选
     function clear(mapping(int24 => Tick.Info) storage self, int24 tick) internal {
         delete self[tick];
     }
 
     /// @notice 根据价格变动的需要过渡到下一个报价
-    /// @param self 包含初始化刻度的所有刻度信息的映射
-    /// @param 转场的目标刻度
-    /// @param FeeGrowthGlobal0X128 每单位流动性的历史全球费用增长（以 token0 为单位）
-    /// @param FeeGrowthGlobal1X128 历史上每单位流动性的全球费用增长（以 token1 为单位）
-    /// @param SecondsPerLiquidityCumulativeX128 每个流动性的当前秒数
-    /// @param tickCumulative 自池首次初始化以来经过的tick * 时间
-    /// @param time 当前区块.timestamp
-    /// @return LiquidityNet 从左到右（从右到左）划线时增加（减去）的流动性金额
+    /// 参数 self 包含初始化刻度的所有刻度信息的映射
+    /// 参数 转场的目标刻度
+    /// 参数 FeeGrowthGlobal0X128 每单位流动性的历史全球费用增长（以 token0 为单位）
+    /// 参数 FeeGrowthGlobal1X128 历史上每单位流动性的全球费用增长（以 token1 为单位）
+    /// 参数 SecondsPerLiquidityCumulativeX128 每个流动性的当前秒数
+    /// 参数 tickCumulative 自池首次初始化以来经过的tick * 时间
+    /// 参数 time 当前区块.timestamp
+    /// 返回 LiquidityNet 从左到右（从右到左）划线时增加（减去）的流动性金额
     function cross(
         mapping(int24 => Tick.Info) storage self,
         int24 tick,

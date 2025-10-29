@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/utils/Strings.sol';
 import '@uniswap/v3-core/contracts/libraries/BitMath.sol';
 import 'base64-sol/base64.sol';
 
-/// @title NFTSVG 图形库
+/// 标题 NFTSVG 图形库
 /// @notice 提供生成与 Uniswap NFT 关联的 SVG 的函数
 library NFTSVG {
     using Strings for uint256;

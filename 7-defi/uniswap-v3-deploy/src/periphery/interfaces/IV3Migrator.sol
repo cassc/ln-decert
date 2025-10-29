@@ -6,7 +6,7 @@ import './IMulticall.sol';
 import './ISelfPermit.sol';
 import './IPoolInitializer.sol';
 
-/// @title V3迁移器
+/// 标题 V3迁移器
 /// @notice 允许将流动性从 Uniswap v2 兼容货币对迁移到 Uniswap v3 池中
 interface IV3Migrator is IMulticall, ISelfPermit, IPoolInitializer {
     struct MigrateParams {
@@ -29,6 +29,6 @@ interface IV3Migrator is IMulticall, ISelfPermit, IPoolInitializer {
     /// @dev 滑点保护是通过“amount{0,1}Min”强制执行的，它应该是预期值的折扣
     /// v2流动性可以获得的最大v3流动性数量。对于迁移到的特殊情况
     /// 超出范围的位置，“amount{0,1}Min”可以设置为 0，强制该位置保持在范围之外
-    /// @param params 迁移 v2 流动性所需的参数，在 calldata 中编码为“MigrateParams”
+    /// 参数 params 迁移 v2 流动性所需的参数，在 calldata 中编码为“MigrateParams”
     function migrate(MigrateParams calldata params) external;
 }

@@ -5,7 +5,7 @@ import './FullMath.sol';
 import './FixedPoint128.sol';
 import './LiquidityMath.sol';
 
-/// @title 位置
+/// 标题 位置
 /// @notice 头寸代表所有者地址在下限和上限边界之间的流动性
 /// @dev 头寸存储额外状态以跟踪该头寸所欠费用
 library Position {
@@ -22,11 +22,11 @@ library Position {
     }
 
     /// @notice 返回职位的信息结构，给定所有者和职位边界
-    /// @param self 包含所有用户位置的映射
-    /// @param 所有者 仓位所有者的地址
-    /// @param tickLower 仓位的下刻度线边界
-    /// @param tickUpper 仓位的上刻度线边界
-    /// @return 给定所有者位置的位置信息结构体
+    /// 参数 self 包含所有用户位置的映射
+    /// 参数 所有者 仓位所有者的地址
+    /// 参数 tickLower 仓位的下刻度线边界
+    /// 参数 tickUpper 仓位的上刻度线边界
+    /// 返回 给定所有者位置的位置信息结构体
     function get(
         mapping(bytes32 => Info) storage self,
         address owner,
@@ -37,10 +37,10 @@ library Position {
     }
 
     /// @notice 将累积费用记入用户的位置
-    /// @param self 要更新的个人位置
-    /// @param LiquidityDelta 头寸更新导致的资金池流动性变化
-    /// @param FeeGrowthInside0X128 在头寸的报价范围内，每单位流动性的 token0 的历史费用增长
-    /// @param FeeGrowthInside1X128 持仓变动范围内每单位流动性的代币 1 的历史费用增长
+    /// 参数 self 要更新的个人位置
+    /// 参数 LiquidityDelta 头寸更新导致的资金池流动性变化
+    /// 参数 FeeGrowthInside0X128 在头寸的报价范围内，每单位流动性的 token0 的历史费用增长
+    /// 参数 FeeGrowthInside1X128 持仓变动范围内每单位流动性的代币 1 的历史费用增长
     function update(
         Info storage self,
         int128 liquidityDelta,

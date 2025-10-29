@@ -13,7 +13,7 @@ import '../libraries/LiquidityAmounts.sol';
 import './PeripheryPayments.sol';
 import './PeripheryImmutableState.sol';
 
-/// @title 流动性管理功能
+/// 标题 流动性管理功能
 /// @notice Uniswap V3 中安全管理流动性的内部函数
 abstract contract LiquidityManagement is IUniswapV3MintCallback, PeripheryImmutableState, PeripheryPayments {
     struct MintCallbackData {

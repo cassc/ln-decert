@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.0 <0.8.0;
 
-/// @title 包含 512 位数学函数
+/// 标题 包含 512 位数学函数
 /// @notice 促进可以在不损失精度的情况下发生中间值溢出的乘法和除法
 /// @dev 处理“幻像溢出”，即允许中间值溢出 256 位的乘法和除法
 library FullMath {
     /// @notice 高精度计算下限（a×b÷分母）。如果结果溢出 uint256 或分母 == 0，则抛出异常
-    /// @param a 被乘数
-    /// @param b 乘数
-    /// @param 分母 除数
-    /// @return 结果 256 位结果
+    /// 参数 a 被乘数
+    /// 参数 b 乘数
+    /// 参数 分母 除数
+    /// 返回 结果 256 位结果
     /// @dev 归功于 MIT 许可下的 Remco Bloemen https://xn--2-umb.com/21/muldiv
     function mulDiv(
         uint256 a,
@@ -106,10 +106,10 @@ library FullMath {
     }
 
     /// @notice 以全精度计算 ceil(a×b÷分母)。如果结果溢出 uint256 或分母 == 0，则抛出异常
-    /// @param a 被乘数
-    /// @param b 乘数
-    /// @param 分母 除数
-    /// @return 结果 256 位结果
+    /// 参数 a 被乘数
+    /// 参数 b 乘数
+    /// 参数 分母 除数
+    /// 返回 结果 256 位结果
     function mulDivRoundingUp(
         uint256 a,
         uint256 b,

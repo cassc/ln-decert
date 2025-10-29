@@ -8,7 +8,7 @@ import './FullMath.sol';
 import './UnsafeMath.sol';
 import './FixedPoint96.sol';
 
-/// @title 基于 Q64.96 sqrt 价格和流动性的功能
+/// 标题 基于 Q64.96 sqrt 价格和流动性的功能
 /// @notice 包含使用价格平方根作为 Q64.96 和流动性来计算 delta 的数学
 library SqrtPriceMath {
     using LowGasSafeMath for uint256;
@@ -20,11 +20,11 @@ library SqrtPriceMath {
     /// 价格较低，以免输出过多。
     /// 最精确的公式是流动性 * sqrtPX96 / (流动性 +- 金额 * sqrtPX96)，
     /// 如果由于溢出而无法实现，我们将计算流动性 / (流动性 / sqrtPX96 +- 金额)。
-    /// @param sqrtPX96 起始价格，即在考虑 token0 delta 之前
-    /// @param 流动性 可用流动性的数量
-    /// @param amount 从虚拟储备中添加或删除多少 token0
-    /// @param add 是否添加或删除token0的数量
-    /// @return 添加或删除数量后的价格，取决于添加量
+    /// 参数 sqrtPX96 起始价格，即在考虑 token0 delta 之前
+    /// 参数 流动性 可用流动性的数量
+    /// 参数 amount 从虚拟储备中添加或删除多少 token0
+    /// 参数 add 是否添加或删除token0的数量
+    /// 返回 添加或删除数量后的价格，取决于添加量
     function getNextSqrtPriceFromAmount0RoundingUp(
         uint160 sqrtPX96,
         uint128 liquidity,
@@ -60,11 +60,11 @@ library SqrtPriceMath {
     /// 足够远以获得所需的输出量，并且在确切的输入情况（价格增加）下，我们需要移动
     /// 价格较低，以免输出过多。
     /// 我们计算的公式在无损版本的 <1 wei 范围内：s​​qrtPX96 +- 金额 / 流动性
-    /// @param sqrtPX96 起始价格，即在考虑 token1 delta 之前
-    /// @param 流动性 可用流动性的数量
-    /// @param amount 从虚拟储备中添加或删除多少 token1
-    /// @param add 是否添加或删除token1的数量
-    /// @return 添加或删除“金额”后的价格
+    /// 参数 sqrtPX96 起始价格，即在考虑 token1 delta 之前
+    /// 参数 流动性 可用流动性的数量
+    /// 参数 amount 从虚拟储备中添加或删除多少 token1
+    /// 参数 add 是否添加或删除token1的数量
+    /// 返回 添加或删除“金额”后的价格
     function getNextSqrtPriceFromAmount1RoundingDown(
         uint160 sqrtPX96,
         uint128 liquidity,
@@ -98,11 +98,11 @@ library SqrtPriceMath {
 
     /// @notice 给定输入金额 token0 或 token1 获取下一个 sqrt 价格
     /// @dev 如果价格或流动性为 0，或者下一个价格超出范围，则抛出异常
-    /// @param sqrtPX96 起始价格，即在考虑输入金额之前
-    /// @param 流动性 可用流动性的数量
-    /// @param amountIn 交换了多少 token0 或 token1
-    /// @param ZeroForOne 中的金额是否为token0或token1
-    /// @return sqrtQX96 输入金额与token0或token1相加后的价格
+    /// 参数 sqrtPX96 起始价格，即在考虑输入金额之前
+    /// 参数 流动性 可用流动性的数量
+    /// 参数 amountIn 交换了多少 token0 或 token1
+    /// 参数 ZeroForOne 中的金额是否为token0或token1
+    /// 返回 sqrtQX96 输入金额与token0或token1相加后的价格
     function getNextSqrtPriceFromInput(
         uint160 sqrtPX96,
         uint128 liquidity,
@@ -121,11 +121,11 @@ library SqrtPriceMath {
 
     /// @notice 给定输出金额 token0 或 token1 获取下一个 sqrt 价格
     /// @dev 如果价格或流动性为 0 或下一个价格超出范围，则抛出异常
-    /// @param sqrtPX96 未计算产量的起始价格
-    /// @param 流动性 可用流动性的数量
-    /// @param amountOut 有多少 token0 或 token1 被换出
-    /// @param ZeroForOne 出的金额是token0还是token1
-    /// @return sqrtQX96 去除token0或token1的输出金额后的价格
+    /// 参数 sqrtPX96 未计算产量的起始价格
+    /// 参数 流动性 可用流动性的数量
+    /// 参数 amountOut 有多少 token0 或 token1 被换出
+    /// 参数 ZeroForOne 出的金额是token0还是token1
+    /// 返回 sqrtQX96 去除token0或token1的输出金额后的价格
     function getNextSqrtPriceFromOutput(
         uint160 sqrtPX96,
         uint128 liquidity,
@@ -145,11 +145,11 @@ library SqrtPriceMath {
     /// @notice 获取两个价格之间的 amount0 delta
     /// @dev 计算流动性 / sqrt(下) - 流动性 / sqrt(上),
     /// 即流动性 * (sqrt(upper) - sqrt(lower)) / (sqrt(upper) * sqrt(lower))
-    /// @param sqrtRatioAX96 开方价格
-    /// @param sqrtRatioBX96 另一个 sqrt 价格
-    /// @param 流动性 可用流动性的数量
-    /// @param roundUp 是否向上或向下舍入金额
-    /// @return amount0 覆盖两个传递价格之间的流动性头寸所需的 token0 数量
+    /// 参数 sqrtRatioAX96 开方价格
+    /// 参数 sqrtRatioBX96 另一个 sqrt 价格
+    /// 参数 流动性 可用流动性的数量
+    /// 参数 roundUp 是否向上或向下舍入金额
+    /// 返回 amount0 覆盖两个传递价格之间的流动性头寸所需的 token0 数量
     function getAmount0Delta(
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96,
@@ -174,11 +174,11 @@ library SqrtPriceMath {
 
     /// @notice 获取两个价格之间的 amount1 Delta
     /// @dev 计算流动性 * (sqrt(上) - sqrt(下))
-    /// @param sqrtRatioAX96 开方价格
-    /// @param sqrtRatioBX96 另一个 sqrt 价格
-    /// @param 流动性 可用流动性的数量
-    /// @param roundUp 是否向上或向下舍入金额
-    /// @return amount1 弥补两个传递价格之间的流动性头寸所需的 token1 数量
+    /// 参数 sqrtRatioAX96 开方价格
+    /// 参数 sqrtRatioBX96 另一个 sqrt 价格
+    /// 参数 流动性 可用流动性的数量
+    /// 参数 roundUp 是否向上或向下舍入金额
+    /// 返回 amount1 弥补两个传递价格之间的流动性头寸所需的 token1 数量
     function getAmount1Delta(
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96,
@@ -194,10 +194,10 @@ library SqrtPriceMath {
     }
 
     /// @notice 获得签名 token0 delta 的助手
-    /// @param sqrtRatioAX96 开方价格
-    /// @param sqrtRatioBX96 另一个 sqrt 价格
-    /// @param 流动性 计算 amount0 delta 的流动性变化
-    /// @return amount0 传递的流动性对应的 token0 数量 两个价格之间的Delta
+    /// 参数 sqrtRatioAX96 开方价格
+    /// 参数 sqrtRatioBX96 另一个 sqrt 价格
+    /// 参数 流动性 计算 amount0 delta 的流动性变化
+    /// 返回 amount0 传递的流动性对应的 token0 数量 两个价格之间的Delta
     function getAmount0Delta(
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96,
@@ -210,10 +210,10 @@ library SqrtPriceMath {
     }
 
     /// @notice 获得签名 token1 增量的助手
-    /// @param sqrtRatioAX96 开方价格
-    /// @param sqrtRatioBX96 另一个 sqrt 价格
-    /// @param 流动性 计算金额 1 增量的流动性变化
-    /// @return amount1 传递的流动性对应的token1数量 两个价格之间的Delta
+    /// 参数 sqrtRatioAX96 开方价格
+    /// 参数 sqrtRatioBX96 另一个 sqrt 价格
+    /// 参数 流动性 计算金额 1 增量的流动性变化
+    /// 返回 amount1 传递的流动性对应的token1数量 两个价格之间的Delta
     function getAmount1Delta(
         uint160 sqrtRatioAX96,
         uint160 sqrtRatioBX96,

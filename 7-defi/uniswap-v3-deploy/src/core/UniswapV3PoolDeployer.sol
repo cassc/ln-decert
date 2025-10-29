@@ -19,11 +19,11 @@ contract UniswapV3PoolDeployer is IUniswapV3PoolDeployer {
 
     /// @dev 通过临时设置参数存储槽来部署具有给定参数的池，然后
     /// 部署池后清除它。
-    /// @param 工厂 Uniswap V3 工厂的合约地址
-    /// @param token0 池中的第一个令牌（按地址排序顺序）
-    /// @param token1 池中的第二个令牌（按地址排序顺序）
-    /// @param 费用 池中每次掉期收取的费用，以百分之一 BIP 计价
-    /// @param tickSpacing 可用刻度之间的间距
+    /// 参数 工厂 Uniswap V3 工厂的合约地址
+    /// 参数 token0 池中的第一个令牌（按地址排序顺序）
+    /// 参数 token1 池中的第二个令牌（按地址排序顺序）
+    /// 参数 费用 池中每次掉期收取的费用，以百分之一 BIP 计价
+    /// 参数 tickSpacing 可用刻度之间的间距
     function deploy(
         address factory,
         address token0,

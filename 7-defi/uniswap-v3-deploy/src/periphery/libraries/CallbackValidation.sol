@@ -7,11 +7,11 @@ import './PoolAddress.sol';
 /// @notice 为来自 Uniswap V3 池的回调提供验证
 library CallbackValidation {
     /// @notice 返回有效 Uniswap V3 池的地址
-    /// @param 工厂 Uniswap V3 工厂的合约地址
-    /// @param tokenA token0或token1的合约地址
-    /// @param tokenB 另一个代币的合约地址
-    /// @param 费用 池中每次掉期收取的费用，以百分之一 BIP 计价
-    /// @return pool V3池合约地址
+    /// 参数 工厂 Uniswap V3 工厂的合约地址
+    /// 参数 tokenA token0或token1的合约地址
+    /// 参数 tokenB 另一个代币的合约地址
+    /// 参数 费用 池中每次掉期收取的费用，以百分之一 BIP 计价
+    /// 返回 pool V3池合约地址
     function verifyCallback(
         address factory,
         address tokenA,
@@ -22,9 +22,9 @@ library CallbackValidation {
     }
 
     /// @notice 返回有效 Uniswap V3 池的地址
-    /// @param 工厂 Uniswap V3 工厂的合约地址
-    /// @param poolKey V3池的识别键
-    /// @return pool V3池合约地址
+    /// 参数 工厂 Uniswap V3 工厂的合约地址
+    /// 参数 poolKey V3池的识别键
+    /// 返回 pool V3池合约地址
     function verifyCallback(address factory, PoolAddress.PoolKey memory poolKey)
         internal
         view

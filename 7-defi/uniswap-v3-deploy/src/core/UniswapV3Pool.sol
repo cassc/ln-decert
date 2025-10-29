@@ -299,10 +299,10 @@ contract UniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
     }
 
     /// @dev 对职位进行一些更改
-    /// @param 参数头寸详细信息以及要生效的头寸流动性变化
-    /// @return 定位一个存储指针，引用给定所有者和刻度范围的位置
-    /// @return amount0 欠矿池的 token0 金额，如果矿池应向接收者付款，则为负数
-    /// @return amount1 欠矿池的 token1 金额，如果矿池应向接收者付款，则为负数
+    /// 参数 参数头寸详细信息以及要生效的头寸流动性变化
+    /// 返回 定位一个存储指针，引用给定所有者和刻度范围的位置
+    /// 返回 amount0 欠矿池的 token0 金额，如果矿池应向接收者付款，则为负数
+    /// 返回 amount1 欠矿池的 token1 金额，如果矿池应向接收者付款，则为负数
     function _modifyPosition(ModifyPositionParams memory params)
         private
         noDelegateCall
@@ -372,10 +372,10 @@ contract UniswapV3Pool is IUniswapV3Pool, NoDelegateCall {
     }
 
     /// @dev 获取并更新具有给定流动性增量的头寸
-    /// @param 所有者 职位的所有者
-    /// @param tickLower 头寸变动范围的下变动价位
-    /// @param tickUpper 仓位变动范围的上限
-    /// @param 勾选当前勾选，传递以避免加载
+    /// 参数 所有者 职位的所有者
+    /// 参数 tickLower 头寸变动范围的下变动价位
+    /// 参数 tickUpper 仓位变动范围的上限
+    /// 参数 勾选当前勾选，传递以避免加载
     function _updatePosition(
         address owner,
         int24 tickLower,

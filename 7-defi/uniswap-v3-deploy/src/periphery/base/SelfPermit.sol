@@ -7,7 +7,7 @@ import '@openzeppelin/contracts/drafts/IERC20Permit.sol';
 import '../interfaces/ISelfPermit.sol';
 import '../interfaces/external/IERC20PermitAllowed.sol';
 
-/// @title 自助许可证
+/// 标题 自助许可证
 /// @notice 调用任何符合 EIP-2612 的令牌的许可以在路由中使用的功能
 /// @dev 这些函数预计将嵌入多重调用中，以允许 EOA 批准合约并调用函数
 /// 需要在单笔交易中获得批准。

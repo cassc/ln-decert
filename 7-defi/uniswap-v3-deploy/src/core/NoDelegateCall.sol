@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.7.6;
 
-/// @title 防止委托调用合约
+/// 标题 防止委托调用合约
 /// @notice 基础合约提供了一个修饰符，用于防止委托调用子合约中的方法
 abstract contract NoDelegateCall {
     /// @dev 本合同原地址

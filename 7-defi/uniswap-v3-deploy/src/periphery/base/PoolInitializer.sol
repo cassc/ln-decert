@@ -7,7 +7,7 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import './PeripheryImmutableState.sol';
 import '../interfaces/IPoolInitializer.sol';
 
-/// @title 创建并初始化 V3 池
+/// 标题 创建并初始化 V3 池
 abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
     /// @inheritdoc IPoolInitializer
     function createAndInitializePoolIfNecessary(

@@ -9,7 +9,7 @@ import '../interfaces/external/IERC1271.sol';
 import '../interfaces/IERC721Permit.sol';
 import './BlockTimestamp.sol';
 
-/// @title ERC721 获许可
+/// 标题 ERC721 获许可
 /// @notice 支持通过签名批准的不可替代代币，即允许
 abstract contract ERC721Permit is BlockTimestamp, ERC721, IERC721Permit {
     /// @dev 获取令牌 ID 的当前随机数，然后递增它，返回原始值

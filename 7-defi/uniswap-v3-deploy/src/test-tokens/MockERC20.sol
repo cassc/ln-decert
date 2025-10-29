@@ -2,7 +2,7 @@
 pragma solidity =0.7.6;
 
 /**
- * @title 模拟 ERC20
+ * 标题 模拟 ERC20
  * @notice 用于测试的简单 ERC20 代币
  * @dev 任何人都可以铸造代币（仅用于测试！）
  */
@@ -25,8 +25,8 @@ contract MockERC20 {
 
     /**
      * @notice 铸造代币（测试用）
-     * @param to 接收地址
-     * @param amount 数量
+     * 参数 to 接收地址
+     * 参数 amount 数量
      */
     function mint(address to, uint256 amount) public {
         totalSupply += amount;

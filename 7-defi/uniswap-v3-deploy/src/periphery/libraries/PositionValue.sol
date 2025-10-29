@@ -10,15 +10,15 @@ import './LiquidityAmounts.sol';
 import './PoolAddress.sol';
 import './PositionKey.sol';
 
-/// @title 返回有关 Uniswap V3 NFT 中持有的代币价值的信息
+/// 标题 返回有关 Uniswap V3 NFT 中持有的代币价值的信息
 library PositionValue {
     /// @notice 返回token0和token1的总金额，即费用和本金之和
     /// 给定的不可替代头寸管理器代币的价值
-    /// @param 位置管理器 Uniswap V3 NonfungiblePositionManager
-    /// @param tokenId 要获取总价值的代币的 tokenId
-    /// @param sqrtRatioX96 用于计算本金金额的平方根价格 X96
-    /// @return amount0 token0 的总金额，包括本金和费用
-    /// @return amount1 代币1的总金额，包括本金和费用
+    /// 参数 位置管理器 Uniswap V3 NonfungiblePositionManager
+    /// 参数 tokenId 要获取总价值的代币的 tokenId
+    /// 参数 sqrtRatioX96 用于计算本金金额的平方根价格 X96
+    /// 返回 amount0 token0 的总金额，包括本金和费用
+    /// 返回 amount1 代币1的总金额，包括本金和费用
     function total(
         INonfungiblePositionManager positionManager,
         uint256 tokenId,
@@ -31,11 +31,11 @@ library PositionValue {
 
     /// @notice 计算事件中欠代币所有者的本金（当前充当流动性）
     /// 该职位已被烧毁
-    /// @param 位置管理器 Uniswap V3 NonfungiblePositionManager
-    /// @param tokenId 要获取总本金的代币的 tokenId
-    /// @param sqrtRatioX96 用于计算本金金额的平方根价格 X96
-    /// @return amount0 token0 的本金金额
-    /// @return amount1 代币1的本金金额
+    /// 参数 位置管理器 Uniswap V3 NonfungiblePositionManager
+    /// 参数 tokenId 要获取总本金的代币的 tokenId
+    /// 参数 sqrtRatioX96 用于计算本金金额的平方根价格 X96
+    /// 返回 amount0 token0 的本金金额
+    /// 返回 amount1 代币1的本金金额
     function principal(
         INonfungiblePositionManager positionManager,
         uint256 tokenId,
@@ -66,10 +66,10 @@ library PositionValue {
     }
 
     /// @notice 计算欠代币所有者的总费用
-    /// @param 位置管理器 Uniswap V3 NonfungiblePositionManager
-    /// @param tokenId 要获取所欠总费用的代币的 tokenId
-    /// @return amount0 token0 所欠费用金额
-    /// @return amount1 代币 1 所欠费用金额
+    /// 参数 位置管理器 Uniswap V3 NonfungiblePositionManager
+    /// 参数 tokenId 要获取所欠总费用的代币的 tokenId
+    /// 返回 amount0 token0 所欠费用金额
+    /// 返回 amount1 代币 1 所欠费用金额
     function fees(INonfungiblePositionManager positionManager, uint256 tokenId)
         internal
         view

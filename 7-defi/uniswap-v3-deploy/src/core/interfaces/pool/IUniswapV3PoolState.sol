@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-/// @title 可以改变的池状态
+/// 标题 可以改变的池状态
 /// @notice 这些方法组成了池的状态，并且可以以任何频率（包括多次）改变
 /// 每笔交易
 interface IUniswapV3PoolState {
     /// @notice 池中的第 0 个存储槽存储许多值，并作为单一方法公开以节省 Gas
     /// 当外部访问时。
-    /// @return sqrtPriceX96 矿池的当前价格，以 sqrt(token1/token0) Q64.96 值表示
+    /// 返回 sqrtPriceX96 矿池的当前价格，以 sqrt(token1/token0) Q64.96 值表示
     /// 池的当前刻度，即根据运行的最后一个刻度转换。
     /// 如果价格处于变动状态，则该值可能并不总是等于 SqrtTickMath.getTickAtSqrtRatio(sqrtPriceX96)
     /// 边界。
@@ -48,8 +48,8 @@ interface IUniswapV3PoolState {
     function liquidity() external view returns (uint128);
 
     /// @notice 查找有关池中特定蜱虫的信息
-    /// @param 勾选要查找的勾选
-    /// @return 流动性总计使用池的头寸流动性总额，无论是价格下跌还是
+    /// 参数 勾选要查找的勾选
+    /// 返回 流动性总计使用池的头寸流动性总额，无论是价格下跌还是
     /// 上面打勾，
     /// 当资金池价格穿过刻度线时，流动性净值有多少流动性变化，
     /// FeeGrowthOutside0X128 相对于 token0 中当前报价在报价另一侧的费用增长，
@@ -79,8 +79,8 @@ interface IUniswapV3PoolState {
     function tickBitmap(int16 wordPosition) external view returns (uint256);
 
     /// @notice 通过位置键返回有关位置的信息
-    /// @param key 位置的键是由所有者、tickLower 和tickUpper 组成的原像的哈希值
-    /// @return _liquidity 头寸的流动资金量，
+    /// 参数 key 位置的键是由所有者、tickLower 和tickUpper 组成的原像的哈希值
+    /// 返回 _liquidity 头寸的流动资金量，
     /// 返回截至最后一次铸币/销毁/戳戳的价格范围内代币0的feeGrowthInside0LastX128费用增长，
     /// 返回截至最后一次铸币/销毁/戳戳的价格范围内代币 1 的 FeeGrowthInside1LastX128 费用增长，
     /// 返回 tokensOwed0 计算出的 token0 欠最后一次铸币/销毁/戳的位置的金额，
@@ -97,10 +97,10 @@ interface IUniswapV3PoolState {
         );
 
     /// @notice 返回有关特定观察索引的数据
-    /// @param index 要获取的观察数组的元素
+    /// 参数 index 要获取的观察数组的元素
     /// @dev 您很可能希望使用 #observe() 而不是此方法来获取一段时间内的观察结果
     /// 之前，而不是在数组中的特定索引处。
-    /// @return blockTimestamp 观察的时间戳，
+    /// 返回 blockTimestamp 观察的时间戳，
     /// 返回tickCumulative，即tick乘以截至观察时间戳的池生命周期所经过的秒数，
     /// 返回 timesPerLiquidityCumulativeX128 截至观察时间戳的池生命周期内每个流动性范围内的秒数，
     /// 返回已初始化的观察是否已初始化并且值是否可以安全使用

@@ -3,7 +3,7 @@ pragma solidity >=0.7.5;
 
 import './IPeripheryPayments.sol';
 
-/// @title 周边支付
+/// 标题 周边支付
 /// @notice 轻松存取 ETH 的功能
 interface IPeripheryPaymentsWithFee is IPeripheryPayments {
     /// @notice 解开合约的 WETH9 余额并将其作为 ETH 发送给接收者，百分比介于
