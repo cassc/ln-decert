@@ -87,6 +87,11 @@ contract FlashSwapArb is IUniswapV2Callee {
 
     /// @inheritdoc IUniswapV2Callee
     function uniswapV2Call(address sender, uint256 amount0, uint256 amount1, bytes calldata data) external override {
+        require(sender == address(this), "BAD_SENDER");
+
+        address expectedPair = expectedCallbackPair;
+        require(msg.sender == expectedPair, "BAD_PAIR");       
+        
         (
             address pairBorrow,
             address pairSwap,
@@ -94,10 +99,9 @@ contract FlashSwapArb is IUniswapV2Callee {
             address tokenPay,
             address profitRecipient,
             bool borrowTokenIs0
+
         ) = abi.decode(data, (address, address, address, address, address, bool));
-        require(sender == address(this), "BAD_SENDER");
-        address expectedPair = expectedCallbackPair;
-        require(expectedPair != address(0) && msg.sender == expectedPair, "BAD_PAIR");
+
         // 再次验证 calldata 中的 pairBorrow，防止攻击者伪造 data 参数绕过校验
         require(pairBorrow == expectedPair, "PAIR_MISMATCH");
         expectedCallbackPair = address(0);
