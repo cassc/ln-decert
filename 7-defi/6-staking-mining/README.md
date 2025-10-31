@@ -72,5 +72,22 @@ $$
 
 4. **借贷集成（可选增益）**
    - 所有者通过 `setLendingProvider` 设置借贷适配器
-   - 新进来的质押会转发到适配器，取款时需要时会从中提取流动性
+   - 新的质押会转发到适配器，取款时如有需要会从中提取流动性
 
+## 类似模式的项目参考
+
+- [Synthetix – StakingRewards](https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingRewards.sol)
+  最早使用 `rewardPerTokenStored` / `userRewardPerTokenPaid` 的实现，奠定了质押奖励模式的范式
+- [Uniswap – Liquidity Staker](https://github.com/Uniswap/liquidity-staker/blob/master/contracts/StakingRewards.sol)
+  直接复用并改造 Synthetix 的逻辑用于 UNI 流动性挖矿
+- [Aave – AaveDistributionManager](https://github.com/aave/aave-stake-v2/blob/master/contracts/stake/AaveDistributionManager.sol)
+  使用 `index` 与 `users[user]` 存储同样的奖励累计指标，为 Safety Module 等资产分发奖励
+- [Compound – Comptroller](https://github.com/compound-finance/compound-protocol/blob/master/contracts/Comptroller.sol)
+  通过 `supplyIndex` / `borrowIndex`（缩放 1e36）向存款人/借款人分配 COMP，采用相同的累积奖励思路
+
+## 可集成的借贷/再质押协议示例
+
+- [Compound cETH (`CEther`)](https://github.com/compound-finance/compound-protocol/blob/master/contracts/CEther.sol)：直接接受原生 ETH，通过 `mint()` 生成 cETH，`redeem()` 赎回 ETH，流程最接近当前测试中的 Mock
+- [Aave WrappedTokenGatewayV3](https://github.com/aave/aave-v3-periphery/blob/master/contracts/misc/WrappedTokenGatewayV3.sol)：提供 `depositETH` / `withdrawETH` 封装，自动完成 WETH 包装并与 LendingPool 交互，适合让 ETH 直接获取额外收益
+- [Lido stETH](https://docs.lido.fi/contracts/lido/) / [Rocket Pool rETH](https://github.com/rocket-pool/rocketpool/blob/master/contracts/contract/token/RocketTokenRETH.sol)：流动性质押协议，质押 ETH 获得收益凭证，赎回时换回 ETH，虽然不是借贷但符合"托管本金换收益"模式
+- [Yearn Vault（v2）](https://github.com/yearn/yearn-vaults/blob/develop/contracts/Vault.vy)：收益聚合金库，接受 (W)ETH 并返回 Vault 份额，赎回时按份额取回底层资产与收益
