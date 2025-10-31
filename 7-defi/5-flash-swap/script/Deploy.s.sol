@@ -59,7 +59,7 @@ contract DeployTokensAndPools is Script {
     }
 
     function _deployFactory(address feeToSetter) internal returns (address factory) {
-        // todo explain 
+        // load the compiled factory bytecode that Foundry stores in out/UniswapV2Factory.sol/UniswapV2Factory.json after forge build.
         bytes memory bytecode = vm.getCode("UniswapV2Factory.sol:UniswapV2Factory");
         bytes memory initCode = abi.encodePacked(bytecode, abi.encode(feeToSetter));
         assembly {

@@ -5,9 +5,10 @@ import {IUniswapV2Pair} from "./interfaces/IUniswapV2Pair.sol";
 import {IUniswapV2Callee} from "./interfaces/IUniswapV2Callee.sol";
 import {UniswapV2Math} from "./UniswapV2Math.sol";
 
-/// @notice Executes a Uniswap V2 flash swap between two pools to capture price differences.
+/// @notice 在两个 Uniswap V2 流动性池之间执行闪电交换，捕获价格差异进行套利
 contract FlashSwapArb is IUniswapV2Callee {
     address public immutable owner;
+    address transient expectedCallbackPair;
 
     event ArbitrageExecuted(
         address indexed initiator,
@@ -27,7 +28,7 @@ contract FlashSwapArb is IUniswapV2Callee {
         owner = msg.sender;
     }
 
-    /// @notice Starts a flash swap that borrows one token from PoolA and swaps it in PoolB.
+    /// @notice 启动闪电交换套利：从池子 A 借入代币，在池子 B 进行交易
     function startArbitrage(
         address pairBorrow,
         address pairSwap,
@@ -51,7 +52,7 @@ contract FlashSwapArb is IUniswapV2Callee {
         }
         address tokenPay = borrowTokenIs0 ? token1 : token0;
 
-        // Make sure the swap direction is valid in the second pool.
+        // 确保在第二个池子中交换方向有效
         IUniswapV2Pair swapPair = IUniswapV2Pair(pairSwap);
         require(swapPair.factory() != address(0), "INVALID_SWAP_PAIR");
         require(
@@ -62,6 +63,13 @@ contract FlashSwapArb is IUniswapV2Callee {
             tokenPay == swapPair.token0() || tokenPay == swapPair.token1(),
             "PAY_TOKEN_NOT_IN_SWAP"
         );
+
+        require(expectedCallbackPair == address(0), "CALLBACK_PENDING");
+        // 使用 transient 存储临时记录允许回调的交易对地址
+        // 防止攻击者部署假的 pair 合约，伪造 calldata 中的 pairBorrow，然后直接调用 uniswapV2Call
+        // 这样可以避免攻击者让 msg.sender 等于假 pair 从而绕过安全检查
+        // 交易结束时该字段会自动清空，不影响下次套利操作
+        expectedCallbackPair = pairBorrow;
 
         (uint112 reserve0, uint112 reserve1, ) = borrowPair.getReserves();
         uint112 reserveBorrowToken = borrowTokenIs0 ? reserve0 : reserve1;
@@ -87,9 +95,12 @@ contract FlashSwapArb is IUniswapV2Callee {
             address profitRecipient,
             bool borrowTokenIs0
         ) = abi.decode(data, (address, address, address, address, address, bool));
-
         require(sender == address(this), "BAD_SENDER");
-        require(msg.sender == pairBorrow, "BAD_PAIR");
+        address expectedPair = expectedCallbackPair;
+        require(expectedPair != address(0) && msg.sender == expectedPair, "BAD_PAIR");
+        // 再次验证 calldata 中的 pairBorrow，防止攻击者伪造 data 参数绕过校验
+        require(pairBorrow == expectedPair, "PAIR_MISMATCH");
+        expectedCallbackPair = address(0);
 
         uint256 amountBorrowed = borrowTokenIs0 ? amount0 : amount1;
         require(amountBorrowed > 0, "NO_BORROW");
@@ -97,7 +108,7 @@ contract FlashSwapArb is IUniswapV2Callee {
         IUniswapV2Pair borrowPair = IUniswapV2Pair(pairBorrow);
         IUniswapV2Pair swapPair = IUniswapV2Pair(pairSwap);
 
-        // Swap the borrowed token in PoolB for the other token.
+        // 在池子 B 中将借入的代币换成另一种代币
         (uint112 reserveSwap0, uint112 reserveSwap1, ) = swapPair.getReserves();
         address swapToken0 = swapPair.token0();
 
@@ -114,7 +125,7 @@ contract FlashSwapArb is IUniswapV2Callee {
 
         require(amountOut > 0, "NO_OUTPUT");
 
-        // Figure out the amount owed back to PoolA in the opposite asset.
+        // 计算需要归还给池子 A 的另一种代币数量
         (uint112 reserveBorrow0, uint112 reserveBorrow1, ) = borrowPair.getReserves();
         uint256 amountToRepay;
         if (borrowTokenIs0) {
