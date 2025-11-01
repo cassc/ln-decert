@@ -61,6 +61,7 @@ contract StakingPool is IStaking {
     uint256 public rewardPerTokenStored; // global accumulator
     uint256 public lastUpdateBlock; // block when rewards were last updated
     address public lendingProvider; // optional external market adapter
+    bool public paused; // emergency circuit breaker state
 
     mapping(address => uint256) private balances; // user stake balances
     mapping(address => uint256) private userRewardPerTokenPaid; // last rewardPerToken snapshot by user
@@ -72,12 +73,16 @@ contract StakingPool is IStaking {
     event Unstaked(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
     event LendingProviderUpdated(address indexed provider);
+    event Paused(address indexed account);
+    event Unpaused(address indexed account);
 
     error Unauthorized();
     error InvalidAmount();
     error InsufficientBalance();
     error WithdrawalFailed();
     error Reentrancy();
+    error PausedError();
+    error NotPaused();
 
     /// @param _rewardToken KK token contract used for minting staking rewards
     constructor(IToken _rewardToken) {
@@ -116,6 +121,16 @@ contract StakingPool is IStaking {
         _;
     }
 
+    modifier whenNotPaused() {
+        if (paused) revert PausedError();
+        _;
+    }
+
+    modifier whenPaused() {
+        if (!paused) revert NotPaused();
+        _;
+    }
+
     /// @notice Configure or swap the external lending adapter
     /// @param provider Adapter address; use zero address to disable lending integration
     function setLendingProvider(address provider) external onlyOwner {
@@ -123,8 +138,20 @@ contract StakingPool is IStaking {
         emit LendingProviderUpdated(provider);
     }
 
+    /// @notice Halt staking interactions during emergencies
+    function pause() external onlyOwner whenNotPaused {
+        paused = true;
+        emit Paused(msg.sender);
+    }
+
+    /// @notice Resume staking interactions after an emergency pause
+    function unpause() external onlyOwner whenPaused {
+        paused = false;
+        emit Unpaused(msg.sender);
+    }
+
     /// @inheritdoc IStaking
-    function stake() external payable override nonReentrant updateReward(msg.sender) {
+    function stake() external payable override nonReentrant whenNotPaused updateReward(msg.sender) {
         uint256 amount = msg.value;
         if (amount == 0) revert InvalidAmount();
 
@@ -141,7 +168,7 @@ contract StakingPool is IStaking {
     }
 
     /// @inheritdoc IStaking
-    function unstake(uint256 amount) external override nonReentrant updateReward(msg.sender) {
+    function unstake(uint256 amount) external override nonReentrant whenNotPaused updateReward(msg.sender) {
         if (amount == 0) revert InvalidAmount();
 
         uint256 balance = balances[msg.sender];
@@ -173,7 +200,7 @@ contract StakingPool is IStaking {
     }
 
     /// @inheritdoc IStaking
-    function claim() external override nonReentrant updateReward(msg.sender) {
+    function claim() external override nonReentrant whenNotPaused updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
         if (reward == 0) return;
 

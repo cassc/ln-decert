@@ -236,4 +236,64 @@ contract ReentrantLendingProvider is ILendingProvider {
         pool.stake{value: 1 ether}();
             vm.stopPrank();
         }
+
+        function testOwnerCanPauseAndUnpause() public {
+            pool.pause();
+            assertTrue(pool.paused(), "pool should be paused");
+
+            pool.unpause();
+            assertFalse(pool.paused(), "pool should be unpaused");
+        }
+
+        function testNonOwnerCannotPause() public {
+            vm.prank(alice);
+            vm.expectRevert(StakingPool.Unauthorized.selector);
+            pool.pause();
+        }
+
+        function testStakeBlockedWhenPaused() public {
+            pool.pause();
+
+            vm.startPrank(alice);
+            vm.expectRevert(StakingPool.PausedError.selector);
+            pool.stake{value: 1 ether}();
+            vm.stopPrank();
+        }
+
+        function testUnstakeBlockedWhenPaused() public {
+            vm.prank(alice);
+            pool.stake{value: 2 ether}();
+
+            pool.pause();
+
+            vm.prank(alice);
+            vm.expectRevert(StakingPool.PausedError.selector);
+            pool.unstake(1 ether);
+        }
+
+        function testClaimBlockedWhenPaused() public {
+            vm.prank(alice);
+            pool.stake{value: 1 ether}();
+
+            vm.roll(block.number + 3);
+
+            pool.pause();
+
+            vm.prank(alice);
+            vm.expectRevert(StakingPool.PausedError.selector);
+            pool.claim();
+        }
+
+        function testUnpauseRestoresFunctionality() public {
+            vm.prank(alice);
+            pool.stake{value: 1 ether}();
+
+            pool.pause();
+            pool.unpause();
+
+            vm.prank(alice);
+            pool.unstake(1 ether);
+
+            assertEq(pool.balanceOf(alice), 0, "unstake should succeed after unpause");
+        }
     }
