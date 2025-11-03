@@ -45,10 +45,9 @@ export INITIAL_RECIPIENT=<初始接收地址>
 
 `foundry_account_name` 可以通过 `cast wallet import` 等命令写入 Foundry 钱包。
 
-### Precision loss possible mitigation strategies
+### 除法精度损失策略
 
-- Ampleforth/Nomad ‑ keep gons like we do, but store a running “remainders” pool. Each rebase tracks leftover gons and drips them back to the owner or treasury so supply stays exact.
-- OlympusDAO/TIME forks ‑ quote balances in “gons” internally, but when a wallet spends its full balance they transfer every remaining gon to avoid dust. They accept the tiny supply drift that remains.
-- Maker’s DSR shares / Compound cTokens ‑ scale by a high‑precision index (ray = 1e27) instead of rebase, then convert with decimals when needed. This avoids truncation at the cost of a different ERC20 feel.
-- StETH / rETH style wrappers ‑ no positive/negative rebase; they use an exchange rate (shares vs assets). Wallets read human numbers via off-chain helpers. This dodges the rounding issue entirely but breaks
-  strict ERC20 semantics.
+- Ampleforth/Nomad ‑ 同样采用内部份额机制，但额外维护一个动态"余数池"。每次 rebase 时跟踪剩余的内部份额并将其回流至所有者或金库，以确保供应量精确无误。
+- OlympusDAO/TIME 分叉 ‑ 内部以固定份额计价余额，当钱包花费全部余额时转移所有剩余份额以避免产生dust余额。可接受极微小的供应量偏差。
+- Maker 的 DSR 份额 / Compound cTokens ‑ 采用高精度索引（ray = 1e27）进行缩放而非 rebase，需要时再转换为小数。这避免了截断问题，但与 ERC20 有更大的使用差异。
+- StETH / rETH 样式包装器 ‑ 不使用正负 rebase 机制，而是采用汇率（份额与资产的兑换比率）。钱包通过链下辅助工具读取可读数值。这种方式完全规避了舍入问题，但偏离了严格的 ERC20 标准。
