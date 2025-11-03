@@ -49,3 +49,6 @@
 [submodule "7-defi/7-rebase-token/lib/openzeppelin-contracts"]
 	path = 7-defi/7-rebase-token/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "7-defi/8-vamm-perpetual/lib/openzeppelin-contracts"]
+	path = 7-defi/8-vamm-perpetual/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
