@@ -14,38 +14,10 @@
 - `test/RebaseToken.t.sol`：Foundry 单元测试，覆盖转账、授权和多次通缩。
 - `script/RebaseToken.s.sol`：部署脚本，需要提供 `INITIAL_RECIPIENT` 环境变量。
 
-## 使用指引
 
-构建合约：
 
-```bash
-forge build
-```
 
-运行测试：
-
-```bash
-forge test
-```
-
-执行部署脚本示例（使用 Foundry 账户别名）：
-
-```bash
-forge script script/RebaseToken.s.sol:RebaseTokenScript \
-  --rpc-url <rpc_url> \
-  --account <foundry_account_name> \
-  --broadcast
-```
-
-提前设置：
-
-```bash
-export INITIAL_RECIPIENT=<初始接收地址>
-```
-
-`foundry_account_name` 可以通过 `cast wallet import` 等命令写入 Foundry 钱包。
-
-### 除法精度损失策略
+### 应对除法精度损失的策略
 
 - Ampleforth/Nomad ‑ 同样采用内部份额机制，但额外维护一个动态"余数池"。每次 rebase 时跟踪剩余的内部份额并将其回流至所有者或金库，以确保供应量精确无误。
 - OlympusDAO/TIME 分叉 ‑ 内部以固定份额计价余额，当钱包花费全部余额时转移所有剩余份额以避免产生dust余额。可接受极微小的供应量偏差。
