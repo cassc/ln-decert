@@ -1,0 +1,10 @@
+testMode: property
+contract: GovEchidna
+cryticArgs:
+  - --solc-args
+  - --base-path . --include-path lib --include-path node_modules --optimize --optimize-runs 200 --evm-version cancun
+sender:
+  - "0x0000000000000000000000000000000000010000"
+balance:
+  - 1000000000000000000
+testLimit: 5000000
