@@ -58,3 +58,6 @@
 [submodule "7-defi/9-option-token/lib/openzeppelin-contracts"]
 	path = 7-defi/9-option-token/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "7-defi/11-flashbot-bundle-transaction/lib/openzeppelin-contracts"]
+	path = 7-defi/11-flashbot-bundle-transaction/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

@@ -1,0 +1,25 @@
+{
+  "name": "11-flashbot-bundle-transaction",
+  "version": "1.0.0",
+  "description": "Flashbots bundle demo for OpenspaceNFT on Sepolia",
+  "type": "module",
+  "scripts": {
+    "bundle": "tsx src/flashbots-bundle.ts",
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.20.0",
+  "dependencies": {
+    "@flashbots/ethers-provider-bundle": "^1.0.0",
+    "dotenv": "^17.2.3",
+    "ethers": "^6.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
