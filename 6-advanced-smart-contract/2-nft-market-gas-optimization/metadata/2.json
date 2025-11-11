@@ -1,0 +1,20 @@
+{
+  "name": "Decent Market #2",
+  "description": "Second NFT in the Decent Market collection. Inspired by Vincenzo Camuccini's painting “Scipio’s Moderation” (La moderazione di Scipione).",
+  "image": "https://sapphire-efficient-penguin-931.mypinata.cloud/ipfs/bafybeiaitq72fakfik6cjyl4377fva3hppszwlgi3ztjvq7tum7npqrct4",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Scipio’s Moderation (Camuccini)"
+    },
+    {
+      "trait_type": "Edition",
+      "value": "Genesis"
+    },
+    {
+      "trait_type": "Year Painted",
+      "display_type": "number",
+      "value": 1810
+    }
+  ]
+}
