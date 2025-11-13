@@ -1,0 +1,10 @@
+{
+  "name": "Decent Market #1",
+  "description": "First NFT in the Decent Market collection. Inspired by Vincenzo Camuccini's painting 'The Death of Julius Caesar' (1798).",
+  "image": "https://sapphire-efficient-penguin-931.mypinata.cloud/ipfs/bafybeiebfbo5vw3fr24qdaxmgpadoqovtefhra25njhp2f4iyk3fwvq7we",
+  "attributes": [
+    { "trait_type": "Background", "value": "The Death of Julius Caesar (Camuccini)" },
+    { "trait_type": "Edition", "value": "Genesis" },
+    { "trait_type": "Year Painted", "display_type": "number", "value": 1798 }
+  ]
+}
