@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ERC20 Transfers</title>
+    <style>
+      :root {
+        font-family: system-ui, -apple-system, sans-serif;
+        color: #111;
+        background: #f5f5f5;
+      }
+      body {
+        margin: 0;
+        padding: 0 16px 32px;
+      }
+      header {
+        padding: 16px 0 8px;
+      }
+      main {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+      form {
+        display: grid;
+        gap: 12px;
+        max-width: 480px;
+        margin-bottom: 16px;
+      }
+      label {
+        font-weight: 600;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      input {
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      button {
+        padding: 10px 12px;
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+      }
+      .status {
+        margin: 8px 0;
+        color: #374151;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+      }
+      th,
+      td {
+        padding: 8px;
+        border-bottom: 1px solid #eee;
+        text-align: left;
+        font-size: 14px;
+      }
+      th {
+        background: #f3f4f6;
+        font-weight: 700;
+      }
+      .muted {
+        color: #6b7280;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 999px;
+        font-size: 12px;
+        color: #fff;
+      }
+      .pill.out {
+        background: #ef4444;
+      }
+      .pill.in {
+        background: #10b981;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>ERC20 Transfer Viewer</h1>
+      <p class="muted">
+        Login with your wallet address, then we fetch your transfers from the backend.
+      </p>
+    </header>
+    <main>
+      <form id="login-form">
+        <label>
+          Wallet address
+          <input
+            id="address-input"
+            name="address"
+            placeholder="0x..."
+            autocomplete="off"
+            required
+          />
+        </label>
+        <button type="submit" id="login-btn">Login &amp; Load Transfers</button>
+        <div id="status" class="status"></div>
+      </form>
+      <div id="results" hidden>
+        <h3 id="results-title"></h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Direction</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Value</th>
+              <th>Tx</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </main>
+    <script>
+      const form = document.getElementById("login-form");
+      const input = document.getElementById("address-input");
+      const statusEl = document.getElementById("status");
+      const rowsEl = document.getElementById("rows");
+      const resultsEl = document.getElementById("results");
+      const titleEl = document.getElementById("results-title");
+      const button = document.getElementById("login-btn");
+
+      const shorten = (str) =>
+        str.slice(0, 6) + "..." + str.slice(str.length - 4);
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const address = input.value.trim();
+        if (!address) return;
+
+        button.disabled = true;
+        statusEl.textContent = "Loading your transfers...";
+        rowsEl.innerHTML = "";
+        resultsEl.hidden = true;
+
+        try {
+          const res = await fetch(`/transfers/${address}?limit=50`);
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || "Request failed");
+          }
+          const data = await res.json();
+          titleEl.textContent = `Transfers for ${shorten(data.address)}`;
+          rowsEl.innerHTML = data.transfers
+            .map((t) => {
+              const isOut = t.from.toLowerCase() === data.address.toLowerCase();
+              const pill = isOut
+                ? '<span class="pill out">Sent</span>'
+                : '<span class="pill in">Received</span>';
+              const value = BigInt(t.value).toString();
+              const addrLink = (addr) =>
+                `<a href="https://sepolia.etherscan.io/address/${addr}" target="_blank" rel="noreferrer noopener">${shorten(addr)}</a>`;
+              const txLink = (hash) =>
+                `<a href="https://sepolia.etherscan.io/tx/${hash}" target="_blank" rel="noreferrer noopener">${shorten(hash)}</a>`;
+              return `
+                <tr>
+                  <td>${pill}</td>
+                  <td class="muted">${addrLink(t.from)}</td>
+                  <td class="muted">${addrLink(t.to)}</td>
+                  <td>${value}</td>
+                  <td class="muted">${txLink(t.txHash)}</td>
+                </tr>
+              `;
+            })
+            .join("");
+
+          resultsEl.hidden = false;
+          statusEl.textContent =
+            data.transfers.length === 0
+              ? "No transfers yet for this address."
+              : `Loaded ${data.transfers.length} transfers.`;
+        } catch (err) {
+          statusEl.textContent = err.message;
+          resultsEl.hidden = true;
+        } finally {
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
