@@ -1,0 +1,22 @@
+{
+  "name": "5-merkle-trie-whitelist-nft-sale",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "proof": "node scripts/generate-proof.mjs",
+    "permit": "node scripts/sign-permit.mjs",
+    "test": "echo \"No JS tests\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.1",
+  "dependencies": {
+    "ethers": "^6.15.0",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.6.0",
+    "yargs": "^18.0.0"
+  }
+}
