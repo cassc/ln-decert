@@ -2,7 +2,6 @@
 
 This project contains the Token Bank smart contracts and the React frontend that lets users deposit ERC20 tokens with either a normal allowance or a Permit2 signature. Users approve Permit2 once, sign an off-chain permit, and the Bank contract calls Permit2 to pull tokens from the wallet.
 
-![Token Bank demo](demo.gif)
 
 ## Contracts
 
