@@ -10,6 +10,15 @@ This project contains the Token Bank smart contracts and the React frontend that
 - `src/Bank.sol` – stores user balances, supports classic `deposit`, `withdraw`, and the new `depositWithPermit2`.
 - `lib/permit2` – Uniswap’s Permit2 implementation (pulled in as a git dependency).
 
+### How Permit2 works
+
+A shared contract that can spend normal ERC20 tokens once the token owner gives Permit2 an allowance. Flow:
+
+- User gives Permit2 a standard ERC20 (eg, the `PermitToken` contract in this project) approve for a token (one-time setup).
+- Later, the user signs an EIP-712 permit (off-chain) telling Permit2 how much a specific spender can pull and where to send it.
+- A spender (eg, the `Bank` contract in this project) calls `permitTransferFrom` on Permit2 with that signature; Permit2 verifies signature/nonce/deadline and then does `safeTransferFrom` on the original ERC20 from the owner to the target.
+- So Permit2 relies on the token’s normal `transferFrom` and the owner’s ERC20 allowance to Permit2. The signed permit lets a spender use that allowance without the owner sending a separate on-chain `approve` for each spender.
+
 ### Local deployment flow
 
 1. Export your RPC URL and key:

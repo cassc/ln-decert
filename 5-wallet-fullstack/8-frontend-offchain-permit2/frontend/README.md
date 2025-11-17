@@ -16,10 +16,10 @@ The UI lets users deposit an ERC20 into the Bank contract in two ways:
    - `VITE_TOKEN_ADDRESS`
    - `VITE_PERMIT2_ADDRESS` (use Uniswap’s canonical address or your local deployment)
    - Chain id, chain name, and RPC URL
-3. Install deps and start the dev server:
+3. Install deps and start the dev server (pnpm):
    ```bash
-   npm install
-   npm run dev
+   pnpm install
+   pnpm dev
    ```
    The app opens on `http://localhost:5173`.
 

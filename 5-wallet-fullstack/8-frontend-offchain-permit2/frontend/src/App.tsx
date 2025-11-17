@@ -6,14 +6,16 @@ import {
   useDisconnect,
   usePublicClient,
   useReadContract,
+  useChainId,
   useSignTypedData,
+  useSwitchChain,
   useWriteContract,
 } from 'wagmi';
 import type { Address } from 'viem';
 import { formatUnits, parseUnits } from 'viem';
 import { bankAbi } from './abi/bank';
 import { tokenAbi } from './abi/token';
-import { bankAddress, chainId, chainName, isAppConfigured, permit2Address, tokenAddress } from './config';
+import { bankAddress, chainId as targetChainId, chainName, isAppConfigured, permit2Address, tokenAddress } from './config';
 import './App.css';
 
 const shortenAddress = (value?: Address | string) => {
@@ -32,10 +34,27 @@ const randomUint256 = () => {
   return BigInt(Date.now());
 };
 
+const explainError = (context: string, error: unknown, fallback: string, currentChainId?: number, targetChainId?: number) => {
+    const err = error as Error;
+    console.error(`Error ${err.message}`)
+  const message = err?.message ?? fallback;
+
+  if (message.includes('does not match the target chain for the transaction')) {
+    return `Wrong network: wallet chainId ${currentChainId ?? '?'} but app expects chainId ${targetChainId ?? '?'} (${chainName}). Switch your wallet to ${chainName} and retry.`;
+  }
+  const stack = typeof err?.stack === 'string' ? err.stack : 'no stack';
+  console.error(`${context} failed`, error);
+  console.error('Stack:', stack);
+  throw err;
+
+};
+
 function App() {
   const { address, isConnected } = useAccount();
   const { connect, connectors, error: connectError, isPending: isConnecting } = useConnect();
   const { disconnect } = useDisconnect();
+  const currentChainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const publicClient = usePublicClient();
   const { signTypedDataAsync } = useSignTypedData();
@@ -156,7 +175,7 @@ function App() {
     permitAllowanceQuery,
   ]);
 
-  const ensureReady = (setMessage: (value: string) => void) => {
+  const ensureReady = async (setMessage: (value: string) => void) => {
     if (!isConnected || !address) {
       setMessage('Connect wallet first.');
       return false;
@@ -164,6 +183,23 @@ function App() {
     if (!isAppConfigured || !bankAddress || !tokenAddress) {
       setMessage('Fill env settings first.');
       return false;
+    }
+    if (currentChainId !== targetChainId) {
+      if (!switchChainAsync) {
+        setMessage(`Switch your wallet to ${chainName}.`);
+        return false;
+      }
+      try {
+        setMessage(`Switching network to ${chainName}...`);
+        const switched = await switchChainAsync({ chainId: targetChainId });
+        if (!switched || switched.id !== targetChainId) {
+          setMessage(`Switch your wallet to ${chainName}.`);
+          return false;
+        }
+      } catch (error) {
+        setMessage(`Switch your wallet to ${chainName}.`);
+        return false;
+      }
     }
     if (!publicClient) {
       setMessage('RPC client not ready.');
@@ -182,7 +218,11 @@ function App() {
 
   const handleApproveBank = async () => {
     setTokenApprovalStatus('');
-    if (!ensureReady(setTokenApprovalStatus) || !bankAddress || !tokenAddress) {
+    if (!(await ensureReady(setTokenApprovalStatus)) || !bankAddress || !tokenAddress) {
+      return;
+    }
+    if (currentChainId !== targetChainId) {
+      setTokenApprovalStatus(`Switch your wallet to ${chainName}.`);
       return;
     }
     try {
@@ -194,6 +234,8 @@ function App() {
       setTokenApprovalStatus('Signing approval...');
       const hash = await writeContractAsync({
         abi: tokenAbi,
+        chainId: targetChainId,
+        account: address,
         address: tokenAddress,
         functionName: 'approve',
         args: [bankAddress, amount],
@@ -203,13 +245,20 @@ function App() {
       setTokenApprovalStatus('Bank allowance updated.');
       bankAllowanceQuery.refetch?.();
     } catch (error) {
-      setTokenApprovalStatus((error as Error).message ?? 'Approval failed.');
+      setTokenApprovalStatus(explainError('Approve bank', error, 'Approval failed.', currentChainId, targetChainId));
     }
   };
 
   const handleApprovePermit2 = async () => {
     setPermitApprovalStatus('');
-    if (!ensureReady(setPermitApprovalStatus) || !tokenAddress || !permit2Address) {
+    if (!(await ensureReady(setPermitApprovalStatus)) || !tokenAddress || !permit2Address) {
+      return;
+    }
+
+    console.log(`currentChainId: ${currentChainId}, targetChainId: ${targetChainId}`)
+
+    if (currentChainId !== targetChainId) {
+      setPermitApprovalStatus(`Switch your wallet to ${chainName}.`);
       return;
     }
     try {
@@ -218,9 +267,12 @@ function App() {
         setPermitApprovalStatus('Enter amount bigger than zero.');
         return;
       }
-      setPermitApprovalStatus('Signing approval...');
+      setPermitApprovalStatus(`Sigining approval on chainId ${targetChainId}`);
+
       const hash = await writeContractAsync({
         abi: tokenAbi,
+        chainId: targetChainId,
+        account: address,
         address: tokenAddress,
         functionName: 'approve',
         args: [permit2Address, amount],
@@ -230,14 +282,18 @@ function App() {
       setPermitApprovalStatus('Permit2 allowance updated.');
       permitAllowanceQuery.refetch?.();
     } catch (error) {
-      setPermitApprovalStatus((error as Error).message ?? 'Approval failed.');
+      setPermitApprovalStatus(explainError('Approve Permit2', error, 'Approval failed.', currentChainId, targetChainId));
     }
   };
 
   const handleDeposit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setDepositStatus('');
-    if (!ensureReady(setDepositStatus) || !bankAddress) {
+    if (!(await ensureReady(setDepositStatus)) || !bankAddress) {
+      return;
+    }
+    if (currentChainId !== targetChainId) {
+      setDepositStatus(`Switch your wallet to ${chainName}.`);
       return;
     }
     try {
@@ -253,6 +309,8 @@ function App() {
       setDepositStatus('Signing transaction...');
       const hash = await writeContractAsync({
         abi: bankAbi,
+        chainId: targetChainId,
+        account: address,
         address: bankAddress,
         functionName: 'deposit',
         args: [amount],
@@ -263,14 +321,18 @@ function App() {
       setDepositAmount('');
       refreshData();
     } catch (error) {
-      setDepositStatus((error as Error).message ?? 'Deposit failed.');
+      setDepositStatus(explainError('Deposit', error, 'Deposit failed.', currentChainId, targetChainId));
     }
   };
 
   const handlePermitDeposit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setPermitDepositStatus('');
-    if (!ensureReady(setPermitDepositStatus) || !bankAddress || !tokenAddress || !signTypedDataAsync) {
+    if (!(await ensureReady(setPermitDepositStatus)) || !bankAddress || !tokenAddress || !signTypedDataAsync) {
+      return;
+    }
+    if (currentChainId !== targetChainId) {
+      setPermitDepositStatus(`Switch your wallet to ${chainName}.`);
       return;
     }
     try {
@@ -292,7 +354,7 @@ function App() {
       const signature = await signTypedDataAsync({
         domain: {
           name: 'Permit2',
-          chainId,
+          chainId: targetChainId,
           verifyingContract: permit2Address,
         },
         types: {
@@ -319,6 +381,8 @@ function App() {
       setPermitDepositStatus('Sending deposit...');
       const hash = await writeContractAsync({
         abi: bankAbi,
+        chainId: targetChainId,
+        account: address,
         address: bankAddress,
         functionName: 'depositWithPermit2',
         args: [
@@ -341,13 +405,17 @@ function App() {
       setPermitDepositAmount('');
       refreshData();
     } catch (error) {
-      setPermitDepositStatus((error as Error).message ?? 'Permit deposit failed.');
+      setPermitDepositStatus(explainError('Permit deposit', error, 'Permit deposit failed.', currentChainId, targetChainId));
     }
   };
 
   const handleWithdraw = async () => {
     setWithdrawStatus('');
-    if (!ensureReady(setWithdrawStatus) || !bankAddress) {
+    if (!(await ensureReady(setWithdrawStatus)) || !bankAddress) {
+      return;
+    }
+    if (currentChainId !== targetChainId) {
+      setWithdrawStatus(`Switch your wallet to ${chainName}.`);
       return;
     }
     if (bankUserBalance === 0n) {
@@ -358,6 +426,8 @@ function App() {
       setWithdrawStatus('Signing transaction...');
       const hash = await writeContractAsync({
         abi: bankAbi,
+        chainId: targetChainId,
+        account: address,
         address: bankAddress,
         functionName: 'withdraw',
         args: [bankUserBalance],
@@ -367,7 +437,8 @@ function App() {
       setWithdrawStatus('Withdraw confirmed.');
       refreshData();
     } catch (error) {
-      setWithdrawStatus((error as Error).message ?? 'Withdraw failed.');
+      setWithdrawStatus(explainError(error, 'Withdraw failed.', currentChainId, targetChainId));
+
     }
   };
 
