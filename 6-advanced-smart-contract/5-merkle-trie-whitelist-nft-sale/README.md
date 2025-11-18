@@ -144,7 +144,6 @@ graph TD
 
 Because there are five leaves, the last hash `L4` is simply promoted up each layer without being duplicated (MerkleTreeJS default when `duplicateOdd` is not set). If you enable `duplicateOdd: true`, the root/proof values will change.
 
-Which produced (trimmed):
 
 ```json
 {
